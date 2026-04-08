@@ -744,7 +744,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
 <!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as fbSignOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut as fbSignOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD0gA-XtZ35PGhnCZrvJrgRqKuJy-IBcyg",
@@ -767,7 +767,12 @@ window._fbSignOut = fbSignOut;
 window.signInWithGoogle = async () => {
   try {
     provider.setCustomParameters({ prompt: 'select_account' });
-    await signInWithPopup(auth, provider);
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isMobile) {
+      await signInWithRedirect(auth, provider);
+    } else {
+      await signInWithPopup(auth, provider);
+    }
   } catch(e) {
     console.error('Login error:', e);
     if (e.code === 'auth/popup-blocked') {
@@ -784,6 +789,9 @@ window.signOut = async () => {
   if (!confirm('確定要登出？')) return;
   await fbSignOut(auth);
 };
+
+// Handle redirect result on page load
+getRedirectResult(auth).catch(e => console.error('Redirect result error:', e));
 
 onAuthStateChanged(auth, async (user) => {
   if (user) {
