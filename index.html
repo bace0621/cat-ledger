@@ -741,11 +741,10 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-<!-- Firebase -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut as fbSignOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-
+<!-- Firebase compat (全域方式，手機相容性最好) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script>
 const firebaseConfig = {
   apiKey: "AIzaSyD0gA-XtZ35PGhnCZrvJrgRqKuJy-IBcyg",
   authDomain: "cat-ledger-dc8e4.firebaseapp.com",
@@ -755,64 +754,51 @@ const firebaseConfig = {
   appId: "1:978308603840:web:94ae9310abdf8d383e7225"
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const provider = new GoogleAuthProvider();
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const provider = new firebase.auth.GoogleAuthProvider();
+provider.setCustomParameters({ prompt: 'select_account' });
 
-// expose to global scope
-window._auth = auth;
-window._provider = provider;
-window._fbSignOut = fbSignOut;
+const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
 window.signInWithGoogle = async () => {
   try {
-    provider.setCustomParameters({ prompt: 'select_account' });
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
     if (isMobile) {
-      await signInWithRedirect(auth, provider);
+      await auth.signInWithRedirect(provider);
     } else {
-      await signInWithPopup(auth, provider);
+      await auth.signInWithPopup(provider);
     }
   } catch(e) {
     console.error('Login error:', e);
-    if (e.code === 'auth/popup-blocked') {
-      alert('彈出視窗被封鎖，請允許彈出視窗後再試');
-    } else if (e.code === 'auth/unauthorized-domain') {
-      alert('網域未授權，請確認 Firebase 設定');
-    } else {
-      alert('登入失敗：' + e.message);
-    }
+    alert('登入失敗：' + e.message);
   }
 };
 
 window.signOut = async () => {
   if (!confirm('確定要登出？')) return;
-  await fbSignOut(auth);
+  await auth.signOut();
 };
 
-// Handle redirect result on page load (for mobile)
-getRedirectResult(auth).then(result => {
+// 手機登入後取得 redirect 結果
+auth.getRedirectResult().then(result => {
   if (result && result.user) {
-    console.log('Redirect login success:', result.user.email);
+    console.log('Redirect 登入成功:', result.user.email);
   }
 }).catch(e => {
-  console.error('Redirect result error:', e);
-  if (e.code !== 'auth/no-auth-event') {
-    alert('登入失敗：' + e.message);
+  if (e.code && e.code !== 'auth/no-auth-event') {
+    console.error('Redirect error:', e);
   }
 });
 
-onAuthStateChanged(auth, async (user) => {
+// 監聽登入狀態
+auth.onAuthStateChanged(async (user) => {
   if (user) {
-    // hide login screen
     document.getElementById('loginScreen').style.display = 'none';
-    // show user info
     const avatar = document.getElementById('userAvatar');
     avatar.src = user.photoURL || '';
     avatar.style.display = user.photoURL ? 'block' : 'none';
     document.getElementById('userName').textContent = user.displayName || user.email;
     document.getElementById('logoutBtn').style.display = 'block';
-    // get token and load data
     window._currentUser = user;
     await window.loadFromSheets();
   } else {
@@ -838,8 +824,9 @@ function showSync(msg, type) {
 }
 
 async function getToken() {
-  if (!window._currentUser) throw new Error('Not logged in');
-  return await window._currentUser.getIdToken(true);
+  const user = firebase.auth().currentUser;
+  if (!user) throw new Error('Not logged in');
+  return await user.getIdToken(true);
 }
 
 window.loadFromSheets = async () => {
