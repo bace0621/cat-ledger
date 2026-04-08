@@ -766,10 +766,17 @@ window._fbSignOut = fbSignOut;
 
 window.signInWithGoogle = async () => {
   try {
+    provider.setCustomParameters({ prompt: 'select_account' });
     await signInWithPopup(auth, provider);
   } catch(e) {
     console.error('Login error:', e);
-    alert('登入失敗，請再試一次');
+    if (e.code === 'auth/popup-blocked') {
+      alert('彈出視窗被封鎖，請允許彈出視窗後再試');
+    } else if (e.code === 'auth/unauthorized-domain') {
+      alert('網域未授權，請確認 Firebase 設定');
+    } else {
+      alert('登入失敗：' + e.message);
+    }
   }
 };
 
