@@ -262,7 +262,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
   <div class="login-logo" style="font-size:56px">🐾</div>
   <div class="login-title">貓貓帳務所</div>
   <div class="login-sub">你的私人財務管家<br>用 Google 帳號登入，資料雲端同步</div>
-  <button class="login-btn" onclick="signInWithGoogle()">
+  <button class="login-btn" id="loginBtn" onclick="if(window.signInWithGoogle){window.signInWithGoogle()}else{alert('頁面載入中，請稍候再試')}"">
     <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
     使用 Google 帳號登入
   </button>
@@ -292,7 +292,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
   <div class="user-bar">
     <img id="userAvatar" class="user-avatar" src="" style="display:none">
     <span id="userName" class="user-name"></span>
-    <button class="logout-btn" onclick="signOut()" style="display:none" id="logoutBtn">登出</button>
+    <button class="logout-btn" onclick="window.signOut && window.signOut()" style="display:none" id="logoutBtn">登出</button>
   </div>
 </div>
 
@@ -790,8 +790,17 @@ window.signOut = async () => {
   await fbSignOut(auth);
 };
 
-// Handle redirect result on page load
-getRedirectResult(auth).catch(e => console.error('Redirect result error:', e));
+// Handle redirect result on page load (for mobile)
+getRedirectResult(auth).then(result => {
+  if (result && result.user) {
+    console.log('Redirect login success:', result.user.email);
+  }
+}).catch(e => {
+  console.error('Redirect result error:', e);
+  if (e.code !== 'auth/no-auth-event') {
+    alert('登入失敗：' + e.message);
+  }
+});
 
 onAuthStateChanged(auth, async (user) => {
   if (user) {
