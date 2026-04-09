@@ -845,8 +845,14 @@ window.loadFromSheets = async () => {
   try {
     showSync('同步中...', 'sync-ing');
     const token = await getToken();
-    const res = await fetch(`${APPS_SCRIPT_URL}?token=${encodeURIComponent(token)}`);
-    const json = await res.json();
+    console.log('Token:', token ? token.substring(0,20)+'...' : 'NONE');
+    const url = `${APPS_SCRIPT_URL}?token=${encodeURIComponent(token)}`;
+    console.log('Fetching:', url.substring(0,80));
+    const res = await fetch(url);
+    console.log('Response status:', res.status);
+    const text = await res.text();
+    console.log('Response text:', text.substring(0,200));
+    const json = JSON.parse(text);
     if (!json.ok) throw new Error(json.error);
     const sd = json.data;
     // merge into D, keeping structure
