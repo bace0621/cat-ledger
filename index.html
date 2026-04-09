@@ -212,8 +212,43 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
 .tag.exp{background:var(--pale);color:var(--a2);}
 .tag.trf{background:#EEEEF8;color:#4858A0;}
 .bar-ok{background:var(--a1);}
+.bill-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bdr);}
+.bill-item:last-child{border-bottom:none;}
+.bill-check{width:20px;height:20px;border:2px solid var(--bdrm);border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;background:var(--surf);}
+.bill-check.checked{background:var(--a1);border-color:var(--a1);color:white;}
+.bill-info{flex:1;}
+.bill-name{font-size:13px;font-weight:600;}
+.bill-meta{font-size:11px;color:var(--txl);margin-top:1px;}
+.bill-amt{font-size:14px;font-weight:700;color:var(--a2);}
+.bill-summary{background:var(--pale);border-radius:var(--rsm);padding:12px 14px;margin-top:12px;display:flex;justify-content:space-between;align-items:center;}
+.bill-summary-label{font-size:13px;font-weight:600;color:var(--txm);}
+.bill-summary-amt{font-family:'DM Serif Display',serif;font-size:20px;color:var(--a2);}
+.credit-acc-tab{padding:8px 14px;border:1.5px solid var(--bdrm);border-radius:99px;background:var(--surf);font-family:inherit;font-size:12px;font-weight:700;color:var(--txm);cursor:pointer;transition:all .15s;}
+.credit-acc-tab.active{background:var(--pale);border-color:var(--a1);color:var(--a2);}
 .bar-warn{background:#E88A30;}
 .bar-over{background:#D94040;}
+
+/* ── Calculator ── */
+.calc-wrap{background:var(--bg);border:1.5px solid var(--bdrm);border-radius:var(--rsm);padding:10px;margin-top:8px;}
+.calc-display{font-family:'DM Serif Display',serif;font-size:22px;font-weight:700;color:var(--tx);text-align:right;padding:8px 12px;background:var(--surf);border-radius:var(--rxs);margin-bottom:8px;min-height:44px;border:1.5px solid var(--bdr);overflow:hidden;}
+.calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+.calc-btn{padding:12px 4px;border:1.5px solid var(--bdrm);border-radius:var(--rxs);background:var(--surf);font-family:inherit;font-size:15px;font-weight:700;color:var(--tx);cursor:pointer;transition:all .15s;text-align:center;}
+.calc-btn:hover{background:var(--pale);}
+.calc-btn.op{color:var(--a1);}
+.calc-btn.eq{background:var(--grad);color:white;border-color:transparent;}
+.calc-btn.eq:hover{opacity:.9;}
+.calc-btn.del{color:#D94040;}
+
+/* ── Search ── */
+.search-wrap{display:flex;gap:8px;margin-bottom:12px;}
+.search-inp{flex:1;padding:10px 14px;border:1.5px solid var(--bdrm);border-radius:var(--rsm);font-family:inherit;font-size:14px;color:var(--tx);background:var(--bg);outline:none;}
+.search-inp:focus{border-color:var(--a1);background:var(--surf);}
+
+/* ── Edit modal ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:200;align-items:center;justify-content:center;}
+.modal-overlay.show{display:flex;}
+.modal-box{background:var(--surf);border-radius:var(--r);padding:24px;margin:0 20px;width:calc(100% - 40px);max-width:420px;max-height:85vh;overflow-y:auto;}
+.modal-title{font-family:'DM Serif Display',serif;font-size:18px;color:var(--tx);margin-bottom:16px;}
 .income-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bdr);}
 .income-item:last-child{border-bottom:none;}
 .claim-item{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--bdr);}
@@ -334,8 +369,31 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
     <!-- 支出 / 收入 共用區 -->
     <div id="form-exp-inc">
       <div class="fg">
-        <label class="flbl">金額</label>
+        <label class="flbl">金額 <button class="btn-sm ghost" onclick="toggleCalc()" style="font-size:11px;padding:3px 8px;margin-left:8px">🧮 計算機</button></label>
         <input type="number" class="finp" id="amtInp" placeholder="0" inputmode="decimal">
+        <div class="calc-wrap" id="calcWrap" style="display:none">
+          <div class="calc-display" id="calcDisplay">0</div>
+          <div class="calc-grid">
+            <button class="calc-btn" onclick="calcInput('7')">7</button>
+            <button class="calc-btn" onclick="calcInput('8')">8</button>
+            <button class="calc-btn" onclick="calcInput('9')">9</button>
+            <button class="calc-btn op" onclick="calcInput('÷')">÷</button>
+            <button class="calc-btn" onclick="calcInput('4')">4</button>
+            <button class="calc-btn" onclick="calcInput('5')">5</button>
+            <button class="calc-btn" onclick="calcInput('6')">6</button>
+            <button class="calc-btn op" onclick="calcInput('×')">×</button>
+            <button class="calc-btn" onclick="calcInput('1')">1</button>
+            <button class="calc-btn" onclick="calcInput('2')">2</button>
+            <button class="calc-btn" onclick="calcInput('3')">3</button>
+            <button class="calc-btn op" onclick="calcInput('-')">−</button>
+            <button class="calc-btn" onclick="calcInput('0')">0</button>
+            <button class="calc-btn" onclick="calcInput('.')">.</button>
+            <button class="calc-btn del" onclick="calcDel()">⌫</button>
+            <button class="calc-btn op" onclick="calcInput('+')">+</button>
+            <button class="calc-btn" onclick="calcClear()" style="grid-column:span 2">清除</button>
+            <button class="calc-btn eq" onclick="calcEqual()" style="grid-column:span 2">確認 =</button>
+          </div>
+        </div>
       </div>
       <div class="fg" id="cat-section">
         <label class="flbl">類別</label>
@@ -433,6 +491,9 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
   <!-- 近期記錄 -->
   <div class="card">
     <div class="card-ttl">近期記錄</div>
+    <div class="search-wrap">
+      <input type="text" class="search-inp" id="searchInp" placeholder="🔍 搜尋記錄..." oninput="renderHome()">
+    </div>
     <div id="recentTx"></div>
   </div>
 </div>
@@ -442,6 +503,12 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
   <div class="card">
     <div class="card-ttl">帳戶總覽</div>
     <div id="accSummary"></div>
+  </div>
+
+  <!-- 信用卡帳單 -->
+  <div class="card" id="creditBillingCard" style="display:none">
+    <div class="card-ttl">💳 信用卡帳單對帳</div>
+    <div id="creditBillingList"></div>
   </div>
   <div class="card" id="accListCard">
     <div class="card-ttl">所有帳戶</div>
@@ -668,6 +735,29 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
     <div class="card-ttl">📤 匯出 Excel</div>
     <div style="font-size:12px;color:var(--txm);margin-bottom:12px">匯出含四個分頁的 Excel：每月摘要、流水帳、資產負債表、固定扣款</div>
     <button class="export-btn" onclick="exportExcel()">⬇ 下載 Excel</button>
+  </div>
+</div>
+
+<!-- Edit transaction modal -->
+<div class="modal-overlay" id="editTxModal">
+  <div class="modal-box">
+    <div class="modal-title">編輯記錄</div>
+    <div class="fg">
+      <label class="flbl">金額</label>
+      <input type="number" class="finp" id="editAmt" placeholder="0" inputmode="decimal">
+    </div>
+    <div class="fg">
+      <label class="flbl">備註</label>
+      <textarea class="note-inp" id="editNote" placeholder="備註..."></textarea>
+    </div>
+    <div class="fg">
+      <label class="flbl">日期</label>
+      <input type="date" class="finp" id="editDate">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
+      <button class="btn-ghost" style="margin-top:0" onclick="closeEditTx()">取消</button>
+      <button class="btn-main" onclick="confirmEditTx()">儲存</button>
+    </div>
   </div>
 </div>
 
@@ -1280,7 +1370,17 @@ function renderHome() {
   }).join('') || '<div class="empty"><p>尚未設定子預算</p></div>';
 
   // Recent txs (last 20)
-  const recent = [...D.txs].sort((a,b)=>b.ts-a.ts).slice(0,20);
+  const query = getSearchQuery();
+  const allCatsSearch = [...D.cats, ...INC_CATS];
+  const recent = [...D.txs].sort((a,b)=>b.ts-a.ts).filter(tx => {
+    if (!query) return true;
+    const cat = allCatsSearch.find(c=>c.id===tx.cat)||{name:''};
+    const acc = D.accounts.find(a=>a.id===tx.acc)||{name:''};
+    return (tx.note||'').toLowerCase().includes(query) ||
+           cat.name.toLowerCase().includes(query) ||
+           acc.name.toLowerCase().includes(query) ||
+           String(tx.amt).includes(query);
+  }).slice(0,50);
   document.getElementById('recentTx').innerHTML = recent.length===0
     ? '<div class="empty"><div class="ei">☀️</div><p>還沒有記錄</p></div>'
     : recent.map(tx=>{
@@ -1294,7 +1394,8 @@ function renderHome() {
               <div class="tx-meta">${tx.dk} · ${fa?.name||'?'} → ${ta?.name||'?'}</div>
             </div>
             <div class="tx-amt trf">${fmt(tx.amt)}</div>
-            <button class="tx-del" onclick="deleteTx('${tx.id}')">✕</button>
+            <button class="tx-del" onclick="openEditTx('${tx.id}')" style="opacity:0.4;font-size:13px" title="編輯">✏️</button>
+          <button class="tx-del" onclick="deleteTx('${tx.id}')">✕</button>
           </div>`;
         }
         if (tx.type==='clm'||tx.type==='settle') {
@@ -1307,7 +1408,8 @@ function renderHome() {
               <div class="tx-meta">${tx.dk} · ${acc2?.name||'?'} <span class="tag" style="background:#FFF8E0;color:#A07000">${isSettle?'回款沖銷':'報帳墊款'}</span></div>
             </div>
             <div class="tx-amt clm">${isSettle?'+':'−'}${fmt(tx.amt)}</div>
-            <button class="tx-del" onclick="deleteTx('${tx.id}')">✕</button>
+            <button class="tx-del" onclick="openEditTx('${tx.id}')" style="opacity:0.4;font-size:13px" title="編輯">✏️</button>
+          <button class="tx-del" onclick="deleteTx('${tx.id}')">✕</button>
           </div>`;
         }
         const allCats = [...D.cats, ...INC_CATS];
@@ -1320,6 +1422,7 @@ function renderHome() {
             <div class="tx-meta">${tx.dk} · ${acc?.name||'?'} <span class="tag ${tx.type}">${tx.type==='inc'?'收入':'支出'}</span>${tx.historical?` <span style="font-size:10px;background:#EEF0F8;color:#6070B0;padding:2px 5px;border-radius:99px;font-weight:700">補登</span>`:''}</div>
           </div>
           <div class="tx-amt ${tx.type}">${tx.type==='inc'?'+':'−'}${fmt(tx.amt)}</div>
+          <button class="tx-del" onclick="openEditTx('${tx.id}')" style="opacity:0.4;font-size:13px" title="編輯">✏️</button>
           <button class="tx-del" onclick="deleteTx('${tx.id}')">✕</button>
         </div>`;
       }).join('');
@@ -1327,6 +1430,7 @@ function renderHome() {
 
 // ══ RENDER ACCOUNTS ══
 function renderAccounts() {
+  renderCreditBilling();
   // Summary cards
   let totalAsset=0, totalLiab=0;
   D.accounts.forEach(a=>{
@@ -1937,6 +2041,178 @@ function getLoanThisMonth(acc) {
   const elapsed = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth()) + 1;
   const period = Math.max(1, Math.min(elapsed, totalMonths));
   return { ...calcPeriodSplit(total, rate, totalMonths, period), period, totalMonths };
+}
+
+// ══ CREDIT CARD BILLING ══
+let activeCreditAccId = null;
+
+function renderCreditBilling() {
+  const creditAccs = D.accounts.filter(a=>a.type==='credit' && !a.archived);
+  const card = document.getElementById('creditBillingCard');
+  if (!creditAccs.length) { card.style.display='none'; return; }
+  card.style.display='block';
+
+  if (!activeCreditAccId || !creditAccs.find(a=>a.id===activeCreditAccId)) {
+    activeCreditAccId = creditAccs[0].id;
+  }
+
+  // tabs for each credit card
+  const tabs = creditAccs.map(a=>`
+    <button class="credit-acc-tab ${a.id===activeCreditAccId?'active':''}"
+      onclick="activeCreditAccId='${a.id}';renderCreditBilling()">
+      ${a.emoji} ${a.name}
+    </button>`).join('');
+
+  // get exp txs for this credit account
+  const txs = D.txs.filter(t=>t.type==='exp' && t.acc===activeCreditAccId)
+    .sort((a,b)=>b.ts-a.ts);
+
+  const checkedTotal = txs.filter(t=>t.billed).reduce((s,t)=>s+t.amt,0);
+  const uncheckedTotal = txs.filter(t=>!t.billed).reduce((s,t)=>s+t.amt,0);
+
+  const allCats = [...D.cats, ...INC_CATS];
+
+  const listHtml = txs.length===0
+    ? '<div class="empty"><p>尚無信用卡消費記錄</p></div>'
+    : txs.map(tx=>{
+        const cat = allCats.find(c=>c.id===tx.cat)||{emoji:'📦',name:tx.cat};
+        return `<div class="bill-item">
+          <div class="bill-check ${tx.billed?'checked':''}" onclick="toggleBilled('${tx.id}')">
+            ${tx.billed?'✓':''}
+          </div>
+          <div class="bill-info">
+            <div class="bill-name">${tx.note||cat.name}</div>
+            <div class="bill-meta">${tx.dk} · ${cat.name}</div>
+          </div>
+          <div class="bill-amt">${fmt(tx.amt)}</div>
+        </div>`;
+      }).join('');
+
+  document.getElementById('creditBillingList').innerHTML = `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">${tabs}</div>
+    ${listHtml}
+    <div class="bill-summary">
+      <div>
+        <div class="bill-summary-label">✅ 本期已勾選</div>
+        <div style="font-size:11px;color:var(--txl);margin-top:2px">⬜ 未勾選 ${fmt(uncheckedTotal)}</div>
+      </div>
+      <div class="bill-summary-amt">${fmt(checkedTotal)}</div>
+    </div>
+    <button class="btn-main" style="margin-top:10px" onclick="payBill('${activeCreditAccId}')">記錄還款 ↔</button>`;
+}
+
+function toggleBilled(txId) {
+  const tx = D.txs.find(t=>t.id===txId);
+  if (!tx) return;
+  tx.billed = !tx.billed;
+  save();
+  renderCreditBilling();
+}
+
+function payBill(accId) {
+  // switch to transfer mode with credit card pre-selected as target
+  showPg('home', document.querySelector('.bb'));
+  setTimeout(()=>{
+    setTxType('trf');
+    const trfTo = document.getElementById('trfTo');
+    if (trfTo) {
+      [...trfTo.options].forEach((o,i)=>{ if(o.value===accId) trfTo.selectedIndex=i; });
+    }
+    toast('請選擇還款來源帳戶後完成轉帳 💳');
+  }, 100);
+}
+
+// ══ PAYMENT REMINDER ══
+function checkPaymentReminder() {
+  const today = new Date();
+  const day = today.getDate();
+  const creditAccs = D.accounts.filter(a=>a.type==='credit' && !a.archived);
+  if (day === 30 && creditAccs.length > 0) {
+    const key = 'reminded_' + getMK(today);
+    if (!localStorage.getItem(key)) {
+      setTimeout(()=>{
+        toast('💳 本月信用卡帳單記得繳款！');
+      }, 2000);
+      localStorage.setItem(key, '1');
+    }
+  }
+}
+
+// ══ CALCULATOR ══
+let calcExpr = '';
+function toggleCalc() {
+  const w = document.getElementById('calcWrap');
+  w.style.display = w.style.display==='none' ? 'block' : 'none';
+  calcExpr = '';
+  document.getElementById('calcDisplay').textContent = '0';
+}
+function calcInput(v) {
+  if (calcExpr === '0' && v !== '.') calcExpr = '';
+  // replace display symbols
+  calcExpr += v;
+  document.getElementById('calcDisplay').textContent = calcExpr || '0';
+}
+function calcDel() {
+  calcExpr = calcExpr.slice(0,-1);
+  document.getElementById('calcDisplay').textContent = calcExpr || '0';
+}
+function calcClear() {
+  calcExpr = '';
+  document.getElementById('calcDisplay').textContent = '0';
+}
+function calcEqual() {
+  try {
+    const expr = calcExpr.replace(/÷/g,'/').replace(/×/g,'*').replace(/−/g,'-');
+    const result = Math.round(Function('"use strict";return (' + expr + ')')() * 100) / 100;
+    document.getElementById('amtInp').value = result;
+    document.getElementById('calcDisplay').textContent = result;
+    calcExpr = String(result);
+    // hide calc after confirm
+    setTimeout(()=>{
+      document.getElementById('calcWrap').style.display='none';
+    }, 300);
+  } catch(e) {
+    document.getElementById('calcDisplay').textContent = '錯誤';
+    calcExpr = '';
+  }
+}
+
+// ══ SEARCH ══
+function getSearchQuery() {
+  const el = document.getElementById('searchInp');
+  return el ? el.value.trim().toLowerCase() : '';
+}
+
+// ══ EDIT TX ══
+let editTxId = null;
+function openEditTx(id) {
+  const tx = D.txs.find(t=>t.id===id);
+  if (!tx) return;
+  editTxId = id;
+  document.getElementById('editAmt').value = tx.amt || '';
+  document.getElementById('editNote').value = tx.note || '';
+  document.getElementById('editDate').value = tx.dk || getTK();
+  document.getElementById('editTxModal').classList.add('show');
+}
+function closeEditTx() {
+  document.getElementById('editTxModal').classList.remove('show');
+  editTxId = null;
+}
+function confirmEditTx() {
+  const tx = D.txs.find(t=>t.id===editTxId);
+  if (!tx) return;
+  const amt = parseFloat(document.getElementById('editAmt').value);
+  const note = document.getElementById('editNote').value.trim();
+  const dk = document.getElementById('editDate').value;
+  if (!amt||amt<=0) { toast('請輸入金額'); return; }
+  tx.amt = amt;
+  tx.note = note;
+  tx.dk = dk;
+  tx.mk = dk.slice(0,7);
+  save();
+  closeEditTx();
+  toast('已更新 ✓');
+  renderHome();
 }
 
 // ══ INIT ══
