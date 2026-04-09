@@ -261,7 +261,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
 <div id="loginScreen" class="login-screen">
   <div class="login-logo" style="font-size:56px">🐾</div>
   <div class="login-title">貓貓帳務所</div>
-  <div class="login-sub">你的私人財務管家<br>用 Google 帳號登入，資料雲端同步</div>
+  <div class="login-sub">你的私人財務管家<br>用 Google 帳號登入，資料雲端同步<br><span style="font-size:12px;opacity:0.7">⚠️ 手機請用 Chrome 開啟，並允許彈出視窗</span></div>
   <button class="login-btn" id="loginBtn" onclick="if(window.signInWithGoogle){window.signInWithGoogle()}else{alert('頁面載入中，請稍候再試')}"">
     <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
     使用 Google 帳號登入
@@ -741,9 +741,9 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-<!-- Firebase compat (全域方式，手機相容性最好) -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<!-- Firebase compat -->
+<script src="https://cdn.jsdelivr.net/npm/firebase@9.23.0/firebase-app-compat.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@9.23.0/firebase-auth-compat.min.js"></script>
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyD0gA-XtZ35PGhnCZrvJrgRqKuJy-IBcyg",
@@ -763,14 +763,16 @@ const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
 window.signInWithGoogle = async () => {
   try {
-    if (isMobile) {
-      await auth.signInWithRedirect(provider);
-    } else {
-      await auth.signInWithPopup(provider);
-    }
+    await auth.signInWithPopup(provider);
   } catch(e) {
     console.error('Login error:', e);
-    alert('登入失敗：' + e.message);
+    if (e.code === 'auth/popup-blocked') {
+      alert('請允許彈出視窗後再試\n\niPhone：設定 > Safari > 允許彈出式視窗\nAndroid：Chrome 網址列右側 > 允許彈出視窗');
+    } else if (e.code === 'auth/cancelled-popup-request') {
+      // 忽略，使用者關掉視窗
+    } else {
+      alert('登入失敗：' + e.message);
+    }
   }
 };
 
@@ -779,16 +781,7 @@ window.signOut = async () => {
   await auth.signOut();
 };
 
-// 手機登入後取得 redirect 結果
-auth.getRedirectResult().then(result => {
-  if (result && result.user) {
-    console.log('Redirect 登入成功:', result.user.email);
-  }
-}).catch(e => {
-  if (e.code && e.code !== 'auth/no-auth-event') {
-    console.error('Redirect error:', e);
-  }
-});
+// redirect result removed - using popup only
 
 // 監聽登入狀態
 auth.onAuthStateChanged(async (user) => {
