@@ -741,66 +741,86 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-<!-- Firebase compat -->
-<script src="https://cdn.jsdelivr.net/npm/firebase@9.23.0/firebase-app-compat.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/firebase@9.23.0/firebase-auth-compat.min.js"></script>
+<!-- Google Identity Services -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyD0gA-XtZ35PGhnCZrvJrgRqKuJy-IBcyg",
-  authDomain: "cat-ledger-dc8e4.firebaseapp.com",
-  projectId: "cat-ledger-dc8e4",
-  storageBucket: "cat-ledger-dc8e4.firebasestorage.app",
-  messagingSenderId: "978308603840",
-  appId: "1:978308603840:web:94ae9310abdf8d383e7225"
-};
+const CLIENT_ID = '978308603840-7habvum54pe9hhant4l4ucl63c0b8u2i.apps.googleusercontent.com';
+const SCOPES = 'https://www.googleapis.com/auth/spreadsheets email profile';
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const provider = new firebase.auth.GoogleAuthProvider();
-provider.setCustomParameters({ prompt: 'select_account' });
+let _tokenClient = null;
+let _accessToken = null;
+let _userInfo = null;
 
-const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+function initGoogleAuth() {
+  _tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    prompt: 'select_account',
+    callback: async (resp) => {
+      if (resp.error) {
+        alert('登入失敗：' + resp.error);
+        return;
+      }
+      _accessToken = resp.access_token;
+      // 取得用戶資料
+      try {
+        const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: 'Bearer ' + _accessToken }
+        });
+        _userInfo = await res.json();
+        onLoginSuccess();
+      } catch(e) {
+        alert('取得用戶資料失敗');
+      }
+    },
+  });
+}
 
-window.signInWithGoogle = async () => {
-  try {
-    await auth.signInWithPopup(provider);
-  } catch(e) {
-    console.error('Login error:', e);
-    if (e.code === 'auth/popup-blocked') {
-      alert('請允許彈出視窗後再試\n\niPhone：設定 > Safari > 允許彈出式視窗\nAndroid：Chrome 網址列右側 > 允許彈出視窗');
-    } else if (e.code === 'auth/cancelled-popup-request') {
-      // 忽略，使用者關掉視窗
-    } else {
-      alert('登入失敗：' + e.message);
-    }
+window.signInWithGoogle = () => {
+  if (!_tokenClient) {
+    alert('Google 登入尚未載入，請稍候再試');
+    return;
   }
+  _tokenClient.requestAccessToken();
 };
 
-window.signOut = async () => {
+window.signOut = () => {
   if (!confirm('確定要登出？')) return;
-  await auth.signOut();
+  if (_accessToken) {
+    google.accounts.oauth2.revoke(_accessToken, () => {});
+  }
+  _accessToken = null;
+  _userInfo = null;
+  window._currentUser = null;
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('userAvatar').style.display = 'none';
+  document.getElementById('userName').textContent = '';
+  document.getElementById('logoutBtn').style.display = 'none';
 };
 
-// redirect result removed - using popup only
+async function onLoginSuccess() {
+  document.getElementById('loginScreen').style.display = 'none';
+  const avatar = document.getElementById('userAvatar');
+  avatar.src = _userInfo.picture || '';
+  avatar.style.display = _userInfo.picture ? 'block' : 'none';
+  document.getElementById('userName').textContent = _userInfo.name || _userInfo.email;
+  document.getElementById('logoutBtn').style.display = 'block';
+  window._currentUser = { 
+    email: _userInfo.email,
+    getIdToken: async () => _accessToken
+  };
+  await window.loadFromSheets();
+}
 
-// 監聽登入狀態
-auth.onAuthStateChanged(async (user) => {
-  if (user) {
-    document.getElementById('loginScreen').style.display = 'none';
-    const avatar = document.getElementById('userAvatar');
-    avatar.src = user.photoURL || '';
-    avatar.style.display = user.photoURL ? 'block' : 'none';
-    document.getElementById('userName').textContent = user.displayName || user.email;
-    document.getElementById('logoutBtn').style.display = 'block';
-    window._currentUser = user;
-    await window.loadFromSheets();
-  } else {
-    document.getElementById('loginScreen').style.display = 'flex';
-    document.getElementById('userAvatar').style.display = 'none';
-    document.getElementById('userName').textContent = '';
-    document.getElementById('logoutBtn').style.display = 'none';
-    window._currentUser = null;
-  }
+// Init after Google script loads
+window.addEventListener('load', () => {
+  // wait for google to be available
+  const wait = setInterval(() => {
+    if (typeof google !== 'undefined' && google.accounts) {
+      clearInterval(wait);
+      initGoogleAuth();
+    }
+  }, 100);
 });
 </script>
 
@@ -817,9 +837,8 @@ function showSync(msg, type) {
 }
 
 async function getToken() {
-  const user = firebase.auth().currentUser;
-  if (!user) throw new Error('Not logged in');
-  return await user.getIdToken(true);
+  if (!_accessToken) throw new Error('Not logged in');
+  return _accessToken;
 }
 
 window.loadFromSheets = async () => {
