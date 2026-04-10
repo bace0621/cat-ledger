@@ -212,6 +212,14 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
 .tag.exp{background:var(--pale);color:var(--a2);}
 .tag.trf{background:#EEEEF8;color:#4858A0;}
 .bar-ok{background:var(--a1);}
+.bank-icon{width:36px;height:36px;border-radius:10px;object-fit:cover;flex-shrink:0;}
+.bank-icon-sel{width:44px;height:44px;border-radius:12px;object-fit:cover;}
+.icon-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px;}
+.icon-opt{border:2px solid var(--bdr);border-radius:10px;padding:6px;cursor:pointer;text-align:center;transition:all .15s;background:var(--surf);}
+.icon-opt:hover{border-color:var(--a1);}
+.icon-opt.sel{border-color:var(--a1);background:var(--pale);}
+.icon-opt img{width:40px;height:40px;border-radius:8px;object-fit:cover;}
+.icon-opt span{display:block;font-size:10px;color:var(--txl);margin-top:3px;}
 .bill-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bdr);}
 .bill-item:last-child{border-bottom:none;}
 .bill-check{width:20px;height:20px;border:2px solid var(--bdrm);border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;background:var(--surf);}
@@ -340,6 +348,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
     <div class="hero-amt" id="budgetLeft">$0</div>
     <div class="hero-sub" id="budgetSub"></div>
     <div class="hero-bar-bg"><div class="hero-bar" id="budgetBar" style="width:100%"></div></div>
+    <button onclick="manualSync()" style="margin-top:12px;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);border-radius:99px;color:white;font-family:inherit;font-size:12px;font-weight:600;padding:6px 14px;cursor:pointer;">🔄 手動同步</button>
   </div>
 
   <div class="sgrid">
@@ -369,7 +378,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
     <!-- 支出 / 收入 共用區 -->
     <div id="form-exp-inc">
       <div class="fg">
-        <label class="flbl">金額 <button class="btn-sm ghost" onclick="toggleCalc()" style="font-size:11px;padding:3px 8px;margin-left:8px">🧮 計算機</button></label>
+        <label class="flbl">金額 <button class="btn-sm ghost" onclick="toggleCalc()" style="font-size:11px;padding:3px 8px;margin-left:8px">🧮 計算機</button><button class="btn-sm ghost" id="voiceBtn" onclick="startVoice()" style="font-size:11px;padding:3px 8px;margin-left:4px;display:none">🎤 語音</button><button class="btn-sm ghost" id="ocrBtn" onclick="startOCR()" style="font-size:11px;padding:3px 8px;margin-left:4px;display:none">📸 截圖</button></label>
         <input type="number" class="finp" id="amtInp" placeholder="0" inputmode="decimal">
         <div class="calc-wrap" id="calcWrap" style="display:none">
           <div class="calc-display" id="calcDisplay">0</div>
@@ -570,11 +579,22 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
     </div>
     <div class="fg">
       <label class="flbl">圖示</label>
-      <div class="row">
-        <span id="newAccEmojiDisplay" style="font-size:24px">🏦</span>
-        <button class="btn-sm ghost" onclick="toggleEmojiPicker('acc')">選 Emoji</button>
+      <div style="margin-bottom:8px">
+        <div style="font-size:11px;font-weight:700;color:var(--txl);margin-bottom:6px">銀行 Icon</div>
+        <div class="icon-grid" id="bankIconGrid"></div>
       </div>
-      <div class="epicker hidden" id="emojiPickerAcc"></div>
+      <div style="margin-top:10px">
+        <div style="font-size:11px;font-weight:700;color:var(--txl);margin-bottom:6px">或選 Emoji</div>
+        <div class="row">
+          <span id="newAccEmojiDisplay" style="font-size:24px">🏦</span>
+          <button class="btn-sm ghost" onclick="toggleEmojiPicker('acc')">選 Emoji</button>
+        </div>
+        <div class="epicker hidden" id="emojiPickerAcc"></div>
+      </div>
+      <div style="margin-top:10px;display:flex;align-items:center;gap:10px">
+        <div id="newAccIconPreview" style="font-size:24px">🏦</div>
+        <span style="font-size:12px;color:var(--txl)" id="newAccIconLabel">未選擇銀行 icon</span>
+      </div>
     </div>
     <button class="btn-main" onclick="addAccount()">新增帳戶</button>
   </div>
@@ -582,6 +602,17 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
 
 <!-- ══ 設定 ══ -->
 <div id="pg-settings" class="pg">
+  <!-- 危險操作 -->
+  <div class="card">
+    <div class="card-ttl">⚠️ 帳戶管理</div>
+    <div style="font-size:13px;color:var(--txm);margin-bottom:12px;line-height:1.6">
+      清空所有帳戶後，請重新建立帳戶並設定起始金額。交易記錄不會刪除。
+    </div>
+    <button onclick="clearAllAccounts()" style="width:100%;padding:13px;background:none;border:1.5px solid #D94040;border-radius:var(--rsm);font-family:inherit;font-size:14px;font-weight:700;color:#D94040;cursor:pointer;">
+      🗑 清空所有帳戶
+    </button>
+  </div>
+
   <!-- 主題 -->
   <div class="card">
     <div class="card-ttl">🎨 主題色系</div>
@@ -676,6 +707,54 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
       <div style="font-family:'DM Serif Display',serif;font-size:26px;color:var(--a2)" id="totalBudgetDisplay">$0</div>
     </div>
   </div>
+
+  <!-- 進階功能 -->
+  <div class="card">
+    <div class="card-ttl">⚡ 進階功能</div>
+
+    <!-- 語音記帳 -->
+    <div style="padding:12px 0;border-bottom:1px solid var(--bdr)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div>
+          <div style="font-size:14px;font-weight:700">🎤 語音記帳</div>
+          <div style="font-size:11px;color:var(--txl);margin-top:2px">免費，說出金額和類別自動填入</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span id="voiceStatus" style="font-size:11px;color:var(--txl)">未開啟</span>
+          <div style="width:44px;height:24px;background:#CCC;border-radius:99px;position:relative;cursor:pointer;transition:background .2s" id="voiceToggle" onclick="toggleVoice()">
+            <div style="position:absolute;top:2px;left:2px;width:20px;height:20px;background:white;border-radius:50%;transition:left .2s" id="voiceKnob"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 截圖記帳 -->
+    <div style="padding:12px 0">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div>
+          <div style="font-size:14px;font-weight:700">📸 截圖記帳</div>
+          <div style="font-size:11px;color:var(--txl);margin-top:2px">上傳收據自動辨識金額（需要 API Key）</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span id="ocrStatus" style="font-size:11px;color:var(--txl)">未開啟</span>
+          <div style="width:44px;height:24px;background:#CCC;border-radius:99px;position:relative;cursor:pointer;transition:background .2s" id="ocrToggle" onclick="toggleOCR()">
+            <div style="position:absolute;top:2px;left:2px;width:20px;height:20px;background:white;border-radius:50%;transition:left .2s" id="ocrKnob"></div>
+          </div>
+        </div>
+      </div>
+      <div id="ocrKeySection" style="display:none">
+        <div style="font-size:11px;color:var(--txl);margin-bottom:6px;line-height:1.5">
+          🔑 Anthropic API Key（儲存在本機，不會上傳）<br>
+          申請：<a href="https://console.anthropic.com" target="_blank" style="color:var(--a1)">console.anthropic.com</a>
+        </div>
+        <div style="display:flex;gap:8px">
+          <input type="password" class="finp" id="apiKeyInp" placeholder="sk-ant-..." style="font-size:13px;padding:10px 12px">
+          <button class="btn-sm" onclick="saveApiKey()">儲存</button>
+        </div>
+        <div id="apiKeyStatus" style="font-size:11px;margin-top:6px;color:var(--txl)"></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ══ 報表 ══ -->
@@ -738,6 +817,52 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
   </div>
 </div>
 
+<!-- Edit account modal -->
+<div class="modal-overlay" id="editAccModal">
+  <div class="modal-box">
+    <div class="modal-title">編輯帳戶</div>
+    <div class="fg">
+      <label class="flbl">帳戶名稱</label>
+      <input type="text" class="finp" id="editAccName" placeholder="帳戶名稱">
+    </div>
+    <div class="fg">
+      <label class="flbl">類型</label>
+      <select class="finp" id="editAccType">
+        <option value="bank">🏦 銀行帳戶</option>
+        <option value="cash">💵 現金</option>
+        <option value="credit">💳 信用卡</option>
+        <option value="invest">📈 股票 / ETF</option>
+        <option value="insurance">🔒 儲蓄險</option>
+        <option value="loan">🏠 貸款</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label class="flbl">起始餘額</label>
+      <input type="number" class="finp" id="editAccBal" placeholder="0" inputmode="decimal">
+    </div>
+    <div class="fg">
+      <label class="flbl">銀行 Icon</label>
+      <div class="icon-grid" id="editBankIconGrid"></div>
+      <div style="margin-top:8px;display:flex;align-items:center;gap:8px">
+        <div id="editAccIconPreview" style="font-size:24px">🏦</div>
+        <button class="btn-sm ghost" onclick="clearEditBankIcon()" style="font-size:11px;padding:4px 8px">清除 icon，改用 Emoji</button>
+      </div>
+    </div>
+    <div class="fg" id="editAccEmojiSection">
+      <label class="flbl">Emoji（未選銀行 icon 時使用）</label>
+      <div class="row">
+        <span id="editAccEmojiDisplay" style="font-size:24px">🏦</span>
+        <button class="btn-sm ghost" onclick="toggleEmojiPicker('editAcc')">選 Emoji</button>
+      </div>
+      <div class="epicker hidden" id="emojiPickerEditAcc"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
+      <button class="btn-ghost" style="margin-top:0" onclick="closeEditAccount()">取消</button>
+      <button class="btn-main" onclick="confirmEditAccount()">儲存</button>
+    </div>
+  </div>
+</div>
+
 <!-- Edit transaction modal -->
 <div class="modal-overlay" id="editTxModal">
   <div class="modal-box">
@@ -770,6 +895,10 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
       <input type="text" class="finp" id="renameCatInp" placeholder="新名稱">
     </div>
     <div class="fg">
+      <label class="flbl">子預算（0 = 不設預算）</label>
+      <input type="number" class="finp" id="renameCatBudget" placeholder="0" inputmode="decimal">
+    </div>
+    <div class="fg">
       <label class="flbl">Emoji</label>
       <div class="row">
         <span id="renameCatEmojiDisplay" style="font-size:24px">📦</span>
@@ -779,7 +908,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
       <button class="btn-ghost" style="margin-top:0" onclick="closeRenameCat()">取消</button>
-      <button class="btn-main" onclick="confirmRenameCat()">確認改名</button>
+      <button class="btn-main" onclick="confirmRenameCat()">儲存</button>
     </div>
   </div>
 </div>
@@ -819,6 +948,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
   </div>
 </div>
 
+<input type="file" id="ocrFileInp" accept="image/*" style="display:none" onchange="processOCRImage(this)">
 <div class="toast" id="toast"></div>
 
 <div class="bnav">
@@ -959,6 +1089,34 @@ window.loadFromSheets = async () => {
   }
 };
 
+window.manualSync = async () => {
+  try {
+    showSync('儲存中...', 'sync-ing');
+    const saveData = {
+      txs: D.txs||[],
+      accounts: D.accounts||[],
+      cats: D.cats||[],
+      fixedExp: D.fixedExp||[],
+      snapshots: D.snapshots||[],
+      claims: D.claims||[],
+    };
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ data: saveData }),
+    });
+    const text = await res.text();
+    const json = JSON.parse(text);
+    if (json.ok) {
+      showSync('✓ 已儲存', 'sync-ok');
+      alert('同步成功！共 ' + (D.txs||[]).length + ' 筆記錄');
+    } else {
+      alert('同步失敗：' + json.error);
+    }
+  } catch(e) {
+    alert('同步錯誤：' + e.message);
+  }
+};
+
 window.saveToSheets = async () => {
   try {
     showSync('儲存中...', 'sync-ing');
@@ -1023,6 +1181,26 @@ const INC_CATS = [
   {id:'divid',   name:'分配金',   emoji:'📊'},
   {id:'other_i', name:'其他收入', emoji:'➕'},
 ];
+
+const BANK_ICONS = [
+  { id:'first',        name:'第一銀行',   file:'first.png' },
+  { id:'first-digital',name:'第一數位',   file:'first-digital.png' },
+  { id:'taishin',      name:'台新銀行',   file:'taishin.png' },
+  { id:'cathay',       name:'國泰世華',   file:'cathay.png' },
+  { id:'sinopac',      name:'永豐銀行',   file:'sinopac.jpg' },
+  { id:'sinopac-pro',  name:'永豐大戶',   file:'sinopac-pro.png' },
+];
+const ICONS_BASE = 'https://bace0621.github.io/cat-ledger/icons/';
+
+function bankIconUrl(file) { return ICONS_BASE + file; }
+function getAccIcon(a) {
+  if (a.bankIcon) return `<img class="bank-icon" src="${bankIconUrl(a.bankIcon)}" alt="${a.name}">`;
+  return `<span style="font-size:18px">${a.emoji||'🏦'}</span>`;
+}
+function getAccIconLarge(a) {
+  if (a.bankIcon) return `<img class="bank-icon-sel" src="${bankIconUrl(a.bankIcon)}" alt="${a.name}">`;
+  return `<span style="font-size:24px">${a.emoji||'🏦'}</span>`;
+}
 
 const EMOJIS = ['🍱','🍔','🍜','🍣','🥗','🧋','☕','🛒','🚗','🚌','✈️','🏍️','🛍️','👗','👟','💄','💅','🎉','🎮','🎬','🎵','🏋️','⚽','🏊','🏥','💊','🧴','🪥','🧹','🏠','🔑','💡','📚','✏️','💻','📱','🖨️','🐱','🐶','🐠','🐇','🌱','🌸','☀️','🌙','❄️','🎂','🎁','🧧','💐','💰','💳','🏦','📈','📊','🔒','💵','🪙','💎','🛺','⚡','🔧','📦','🎯','✨','🌈','🎪','🏖️','🏔️','🗺️','🎠','🧩','🎭','🎨'];
 
@@ -1431,6 +1609,7 @@ function renderHome() {
 // ══ RENDER ACCOUNTS ══
 function renderAccounts() {
   renderCreditBilling();
+  renderBankIconGrid();
   // Summary cards
   let totalAsset=0, totalLiab=0;
   D.accounts.forEach(a=>{
@@ -1452,7 +1631,7 @@ function renderAccounts() {
     const bal = getAccBal(a.id);
     const isNeg = bal<0;
     return `<div class="acc-row">
-      <div class="acc-row-ico">${a.emoji}</div>
+      <div class="acc-row-ico" style="background:none;padding:0">${a.bankIcon ? `<img class="bank-icon" src="${bankIconUrl(a.bankIcon)}" alt="${a.name}">` : `<span style="font-size:18px;width:34px;height:34px;background:var(--pale);border-radius:8px;display:flex;align-items:center;justify-content:center">${a.emoji}</span>`}</div>
       <div class="acc-row-info">
         <div class="acc-row-name">${a.name}${a.archived?` <span style="font-size:10px;background:#F0EDEA;color:#A09080;padding:2px 6px;border-radius:99px;font-weight:700">封存</span>`:''}</div>
         <div class="acc-row-type">${typeLabel[a.type]||a.type}${a.loanData?` · ${a.loanData.rate}% · ${a.loanData.years}年`:''}</div>
@@ -1461,7 +1640,6 @@ function renderAccounts() {
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
         <div class="acc-row-bal" style="color:${isNeg?'#D94040':'var(--a2)'}">${isNeg?'-':'+'}${fmt(bal)}</div>
         <div style="display:flex;gap:4px">
-          <button class="btn-sm ghost" onclick="editInitBal('${a.id}')" style="font-size:11px;padding:4px 8px">起始值</button>
           <button class="btn-sm ghost" onclick="archiveAccount('${a.id}')" style="font-size:11px;padding:4px 8px">${a.archived?'取消封存':'封存'}</button>
         </div>
       </div>
@@ -1500,12 +1678,15 @@ function addAccount() {
     selAccEmoji='🏦';
   } else {
     const initBal = parseFloat(document.getElementById('newAccBal').value)||0;
-    D.accounts.push({id:'acc'+Date.now(), name, type, emoji:selAccEmoji, initBal});
+    D.accounts.push({id:'acc'+Date.now(), name, type, emoji:selAccEmoji, initBal, bankIcon: selBankIcon ? BANK_ICONS.find(b=>b.id===selBankIcon)?.file : null});
     document.getElementById('newAccBal').value='';
   }
 
   save();
   document.getElementById('newAccName').value='';
+  selBankIcon = null;
+  document.getElementById('newAccIconPreview').innerHTML = '🏦';
+  document.getElementById('newAccIconLabel').textContent = '未選擇銀行 icon';
   toast('帳戶已新增 ✓');
   renderAccounts();
   renderAccSel();
@@ -1535,6 +1716,15 @@ function confirmInitBal() {
   renderAccounts();
 }
 
+function clearAllAccounts() {
+  if (!confirm('確定清空所有帳戶？\n交易記錄會保留，但帳戶關聯會斷掉。\n\n建議先匯出 Excel 備份。')) return;
+  D.accounts = [];
+  save();
+  toast('所有帳戶已清空，請重新建立 🗑');
+  renderAccounts();
+  renderAccSel();
+}
+
 function archiveAccount(id) {
   const acc = D.accounts.find(a=>a.id===id);
   if (!acc) return;
@@ -1554,7 +1744,7 @@ function buildEmojiPicker(pickerId, onPick) {
   el.innerHTML = EMOJIS.map(e=>`<button class="epicker-btn" onclick="(${onPick.toString()})('${e}')">${e}</button>`).join('');
 }
 function toggleEmojiPicker(type) {
-  const idMap = {acc:'emojiPickerAcc', cat:'emojiPickerCat', fx:'emojiPickerFx', renameCat:'emojiPickerRenameCat'};
+  const idMap = {acc:'emojiPickerAcc', cat:'emojiPickerCat', fx:'emojiPickerFx', renameCat:'emojiPickerRenameCat', editAcc:'emojiPickerEditAcc'};
   const id = idMap[type];
   const el = document.getElementById(id);
   if (el.classList.contains('hidden')) {
@@ -1565,6 +1755,8 @@ function toggleEmojiPicker(type) {
         ? (e)=>{ selCatEmoji=e; document.getElementById('newCatEmojiDisplay').textContent=e; document.getElementById('emojiPickerCat').classList.add('hidden'); }
         : type==='renameCat'
         ? (e)=>{ renameCatEmoji=e; document.getElementById('renameCatEmojiDisplay').textContent=e; document.getElementById('emojiPickerRenameCat').classList.add('hidden'); }
+        : type==='editAcc'
+        ? (e)=>{ editAccEmoji=e; document.getElementById('editAccEmojiDisplay').textContent=e; document.getElementById('emojiPickerEditAcc').classList.add('hidden'); }
         : (e)=>{ selFxEmoji=e; document.getElementById('newFxEmojiDisplay').textContent=e; document.getElementById('emojiPickerFx').classList.add('hidden'); };
       buildEmojiPicker(id, cb);
     }
@@ -1578,15 +1770,17 @@ function toggleEmojiPicker(type) {
 function renderSettings() {
   applyTheme();
   renderFixedExpList();
+  initAdvancedSettings();
   // Cat manage
   document.getElementById('catManage').innerHTML = D.cats.map(c=>`
     <div class="bset-row" style="opacity:${c.archived?0.5:1}">
       <span style="font-size:18px">${c.emoji}</span>
       <div style="flex:1">
         <div style="font-size:13px;font-weight:600">${c.name}${c.archived?` <span style="font-size:10px;background:#F0EDEA;color:#A09080;padding:2px 6px;border-radius:99px;font-weight:700">封存</span>`:''}</div>
+        ${c.budget!==undefined?`<div style="font-size:11px;color:var(--txl);margin-top:2px">預算 ${fmt(c.budget||0)}</div>`:'<div style="font-size:11px;color:var(--txl);margin-top:2px">無預算</div>'}
       </div>
       <div style="display:flex;gap:4px">
-        ${!c.archived?`<button class="btn-sm ghost" onclick="openRenameCat('${c.id}')" style="font-size:11px;padding:4px 8px">改名</button>`:''}
+        ${!c.archived?`<button class="btn-sm ghost" onclick="openRenameCat('${c.id}')" style="font-size:11px;padding:4px 8px">✏️ 編輯</button>`:''}
         <button class="btn-sm ghost" onclick="archiveCat('${c.id}')" style="font-size:11px;padding:4px 8px">${c.archived?'取消封存':'封存'}</button>
       </div>
     </div>`).join('');
@@ -1635,6 +1829,7 @@ function openRenameCat(id) {
   renameCatId = id;
   renameCatEmoji = cat.emoji;
   document.getElementById('renameCatInp').value = cat.name;
+  document.getElementById('renameCatBudget').value = cat.budget || 0;
   document.getElementById('renameCatEmojiDisplay').textContent = cat.emoji;
   document.getElementById('emojiPickerRenameCat').innerHTML = '';
   document.getElementById('emojiPickerRenameCat').classList.add('hidden');
@@ -1648,9 +1843,11 @@ function confirmRenameCat() {
   const cat = D.cats.find(c=>c.id===renameCatId);
   if (!cat) return;
   const newName = document.getElementById('renameCatInp').value.trim();
+  const budget = parseInt(document.getElementById('renameCatBudget').value)||0;
   if (!newName) { toast('請輸入名稱'); return; }
   cat.name = newName;
   cat.emoji = renameCatEmoji;
+  cat.budget = budget > 0 ? budget : undefined;
   save();
   closeRenameCat();
   toast('類別已更新 ✓');
@@ -2136,6 +2333,335 @@ function checkPaymentReminder() {
       localStorage.setItem(key, '1');
     }
   }
+}
+
+// ══ EDIT ACCOUNT ══
+let editAccId = null;
+let editSelBankIcon = null;
+let editAccEmoji = '🏦';
+
+function openEditAccount(id) {
+  const acc = D.accounts.find(a=>a.id===id);
+  if (!acc) return;
+  editAccId = id;
+  editSelBankIcon = acc.bankIcon || null;
+  editAccEmoji = acc.emoji || '🏦';
+
+  document.getElementById('editAccName').value = acc.name;
+  document.getElementById('editAccType').value = acc.type;
+  document.getElementById('editAccBal').value = acc.initBal || 0;
+  document.getElementById('editAccEmojiDisplay').textContent = acc.emoji || '🏦';
+  document.getElementById('emojiPickerEditAcc').innerHTML = '';
+  document.getElementById('emojiPickerEditAcc').classList.add('hidden');
+
+  // render bank icon grid
+  const grid = document.getElementById('editBankIconGrid');
+  grid.innerHTML = BANK_ICONS.map(b=>`
+    <div class="icon-opt ${editSelBankIcon===b.file?'sel':''}" onclick="selectEditBankIcon('${b.file}','${b.name}')">
+      <img src="${bankIconUrl(b.file)}" alt="${b.name}" onerror="this.style.display='none'">
+      <span>${b.name}</span>
+    </div>`).join('');
+
+  // preview
+  const preview = document.getElementById('editAccIconPreview');
+  if (acc.bankIcon) {
+    preview.innerHTML = `<img style="width:44px;height:44px;border-radius:12px;object-fit:cover" src="${bankIconUrl(acc.bankIcon)}">`;
+  } else {
+    preview.textContent = acc.emoji || '🏦';
+  }
+
+  document.getElementById('editAccModal').classList.add('show');
+}
+
+function selectEditBankIcon(file, name) {
+  editSelBankIcon = file;
+  const grid = document.getElementById('editBankIconGrid');
+  grid.querySelectorAll('.icon-opt').forEach(el => el.classList.remove('sel'));
+  const preview = document.getElementById('editAccIconPreview');
+  preview.innerHTML = `<img style="width:44px;height:44px;border-radius:12px;object-fit:cover" src="${bankIconUrl(file)}">`;
+  // re-render to show selected
+  document.getElementById('editBankIconGrid').innerHTML = BANK_ICONS.map(b=>`
+    <div class="icon-opt ${editSelBankIcon===b.file?'sel':''}" onclick="selectEditBankIcon('${b.file}','${b.name}')">
+      <img src="${bankIconUrl(b.file)}" alt="${b.name}" onerror="this.style.display='none'">
+      <span>${b.name}</span>
+    </div>`).join('');
+}
+
+function clearEditBankIcon() {
+  editSelBankIcon = null;
+  document.getElementById('editAccIconPreview').textContent = editAccEmoji;
+  document.getElementById('editBankIconGrid').innerHTML = BANK_ICONS.map(b=>`
+    <div class="icon-opt" onclick="selectEditBankIcon('${b.file}','${b.name}')">
+      <img src="${bankIconUrl(b.file)}" alt="${b.name}" onerror="this.style.display='none'">
+      <span>${b.name}</span>
+    </div>`).join('');
+}
+
+function closeEditAccount() {
+  document.getElementById('editAccModal').classList.remove('show');
+  editAccId = null;
+}
+
+function confirmEditAccount() {
+  const acc = D.accounts.find(a=>a.id===editAccId);
+  if (!acc) return;
+  const name = document.getElementById('editAccName').value.trim();
+  const type = document.getElementById('editAccType').value;
+  const initBal = parseFloat(document.getElementById('editAccBal').value)||0;
+  if (!name) { toast('請輸入帳戶名稱'); return; }
+  acc.name = name;
+  acc.type = type;
+  acc.initBal = initBal;
+  acc.bankIcon = editSelBankIcon || null;
+  acc.emoji = editAccEmoji;
+  save();
+  closeEditAccount();
+  toast('帳戶已更新 ✓');
+  renderAccounts();
+  renderAccSel();
+}
+
+// ══ BANK ICONS ══
+let selBankIcon = null;
+
+function renderBankIconGrid() {
+  const grid = document.getElementById('bankIconGrid');
+  if (!grid) return;
+  grid.innerHTML = BANK_ICONS.map(b=>`
+    <div class="icon-opt ${selBankIcon===b.id?'sel':''}" onclick="selectBankIcon('${b.id}','${b.file}','${b.name}')">
+      <img src="${bankIconUrl(b.file)}" alt="${b.name}" onerror="this.style.display='none'">
+      <span>${b.name}</span>
+    </div>`).join('');
+}
+
+function selectBankIcon(id, file, name) {
+  selBankIcon = id;
+  selAccEmoji = '';
+  document.getElementById('newAccEmojiDisplay').textContent = '🏦';
+  document.getElementById('newAccIconPreview').innerHTML = `<img style="width:44px;height:44px;border-radius:12px;object-fit:cover" src="${bankIconUrl(file)}">`;
+  document.getElementById('newAccIconLabel').textContent = name + ' 已選擇';
+  renderBankIconGrid();
+}
+
+// ══ ADVANCED FEATURES ══
+let voiceEnabled = localStorage.getItem('voiceEnabled') === '1';
+let ocrEnabled = localStorage.getItem('ocrEnabled') === '1';
+let anthropicKey = localStorage.getItem('anthropicKey') || '';
+
+function initAdvancedSettings() {
+  // voice toggle
+  setToggleUI('voiceToggle', 'voiceKnob', 'voiceStatus', voiceEnabled, '已開啟', '未開啟');
+  setToggleUI('ocrToggle', 'ocrKnob', 'ocrStatus', ocrEnabled, '已開啟', '未開啟');
+  // show/hide API key section
+  const ks = document.getElementById('ocrKeySection');
+  if (ks) ks.style.display = ocrEnabled ? 'block' : 'none';
+  if (anthropicKey) {
+    const el = document.getElementById('apiKeyStatus');
+    if (el) el.textContent = '✅ API Key 已設定';
+  }
+  // show/hide buttons in form
+  const vb = document.getElementById('voiceBtn');
+  const ob = document.getElementById('ocrBtn');
+  if (vb) vb.style.display = voiceEnabled ? 'inline-block' : 'none';
+  if (ob) ob.style.display = (ocrEnabled && anthropicKey) ? 'inline-block' : 'none';
+}
+
+function setToggleUI(toggleId, knobId, statusId, enabled, onText, offText) {
+  const toggle = document.getElementById(toggleId);
+  const knob = document.getElementById(knobId);
+  const status = document.getElementById(statusId);
+  if (!toggle) return;
+  toggle.style.background = enabled ? 'var(--a1)' : '#CCC';
+  if (knob) knob.style.left = enabled ? '22px' : '2px';
+  if (status) { status.textContent = enabled ? onText : offText; status.style.color = enabled ? 'var(--a1)' : 'var(--txl)'; }
+}
+
+function toggleVoice() {
+  voiceEnabled = !voiceEnabled;
+  localStorage.setItem('voiceEnabled', voiceEnabled ? '1' : '0');
+  setToggleUI('voiceToggle', 'voiceKnob', 'voiceStatus', voiceEnabled, '已開啟', '未開啟');
+  const vb = document.getElementById('voiceBtn');
+  if (vb) vb.style.display = voiceEnabled ? 'inline-block' : 'none';
+  toast(voiceEnabled ? '語音記帳已開啟 🎤' : '語音記帳已關閉');
+}
+
+function toggleOCR() {
+  ocrEnabled = !ocrEnabled;
+  localStorage.setItem('ocrEnabled', ocrEnabled ? '1' : '0');
+  setToggleUI('ocrToggle', 'ocrKnob', 'ocrStatus', ocrEnabled, '已開啟', '未開啟');
+  const ks = document.getElementById('ocrKeySection');
+  if (ks) ks.style.display = ocrEnabled ? 'block' : 'none';
+  const ob = document.getElementById('ocrBtn');
+  if (ob) ob.style.display = (ocrEnabled && anthropicKey) ? 'inline-block' : 'none';
+  toast(ocrEnabled ? '截圖記帳已開啟 📸' : '截圖記帳已關閉');
+}
+
+function saveApiKey() {
+  const key = document.getElementById('apiKeyInp').value.trim();
+  if (!key.startsWith('sk-ant-')) { toast('API Key 格式不對，應以 sk-ant- 開頭'); return; }
+  anthropicKey = key;
+  localStorage.setItem('anthropicKey', key);
+  document.getElementById('apiKeyStatus').textContent = '✅ API Key 已儲存';
+  document.getElementById('apiKeyInp').value = '';
+  const ob = document.getElementById('ocrBtn');
+  if (ob) ob.style.display = 'inline-block';
+  toast('API Key 已儲存 ✅');
+}
+
+// ── 語音記帳 ──
+let recognition = null;
+let isListening = false;
+
+function startVoice() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    toast('你的瀏覽器不支援語音辨識，請用 Chrome');
+    return;
+  }
+  if (isListening) { recognition && recognition.stop(); return; }
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SpeechRecognition();
+  recognition.lang = 'zh-TW';
+  recognition.continuous = false;
+  recognition.interimResults = false;
+
+  const btn = document.getElementById('voiceBtn');
+  btn.textContent = '🔴 錄音中';
+  btn.style.color = '#D94040';
+  isListening = true;
+
+  recognition.onresult = (e) => {
+    const text = e.results[0][0].transcript;
+    console.log('語音辨識結果:', text);
+    parseVoiceInput(text);
+  };
+
+  recognition.onerror = (e) => {
+    toast('語音辨識失敗：' + e.error);
+    resetVoiceBtn();
+  };
+
+  recognition.onend = () => { resetVoiceBtn(); };
+  recognition.start();
+  toast('請說出金額和類別，例如：午餐一百五十元');
+}
+
+function resetVoiceBtn() {
+  isListening = false;
+  const btn = document.getElementById('voiceBtn');
+  if (btn) { btn.textContent = '🎤 語音'; btn.style.color = ''; }
+}
+
+function parseVoiceInput(text) {
+  // 抓金額：數字（含中文數字）
+  const numMap = {'零':0,'一':1,'二':2,'兩':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9,'十':10,'百':100,'千':1000,'萬':10000};
+  let amt = 0;
+
+  // 先試阿拉伯數字
+  const arabicMatch = text.match(/(\d+(\.\d+)?)/);
+  if (arabicMatch) {
+    amt = parseFloat(arabicMatch[1]);
+  } else {
+    // 試中文數字
+    const cnMatch = text.match(/([零一二兩三四五六七八九十百千萬]+)/);
+    if (cnMatch) {
+      const cn = cnMatch[1];
+      let n = 0, tmp = 0;
+      for (const ch of cn) {
+        const v = numMap[ch] || 0;
+        if (v >= 10) { tmp = tmp || 1; n += tmp * v; tmp = 0; }
+        else tmp = v;
+      }
+      amt = n + tmp;
+    }
+  }
+
+  if (amt > 0) {
+    document.getElementById('amtInp').value = amt;
+    toast(`辨識到金額：${fmt(amt)}，請選擇類別`);
+  } else {
+    toast('沒有辨識到金額，請再試一次');
+  }
+
+  // 抓備註（把數字部分去掉剩下的文字）
+  const noteText = text.replace(/(\d+(\.\d+)?)/g,'').replace(/[元塊錢圓]/g,'').trim();
+  if (noteText) {
+    const noteEl = document.getElementById('noteInp');
+    if (noteEl && !noteEl.value) noteEl.value = noteText;
+  }
+}
+
+// ── 截圖記帳 ──
+function startOCR() {
+  document.getElementById('ocrFileInp').click();
+}
+
+async function processOCRImage(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (!anthropicKey) { toast('請先在設定頁填入 API Key'); return; }
+
+  toast('辨識中...請稍候 📸');
+
+  try {
+    const base64 = await fileToBase64(file);
+    const mediaType = file.type || 'image/jpeg';
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': anthropicKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 300,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+            { type: 'text', text: '這是一張收據或帳單截圖。請只回覆 JSON，格式：{"amt":金額數字,"note":"商家或品項名稱","date":"YYYY-MM-DD或空字串"}。只取總金額，不要包含任何其他文字。' }
+          ]
+        }]
+      })
+    });
+
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+
+    const text = data.content[0].text.trim();
+    const json = JSON.parse(text.replace(/```json|```/g,'').trim());
+
+    if (json.amt) {
+      document.getElementById('amtInp').value = json.amt;
+      if (json.note) {
+        const noteEl = document.getElementById('noteInp');
+        if (noteEl) noteEl.value = json.note;
+      }
+      if (json.date && document.getElementById('histDateInp')) {
+        document.getElementById('histDateInp').value = json.date;
+      }
+      toast(`辨識成功！金額 ${fmt(json.amt)}，請確認後記帳 ✅`);
+    } else {
+      toast('沒有辨識到金額，請手動輸入');
+    }
+  } catch(e) {
+    console.error('OCR error:', e);
+    toast('辨識失敗：' + e.message);
+  }
+
+  input.value = '';
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
 
 // ══ CALCULATOR ══
