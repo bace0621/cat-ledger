@@ -428,22 +428,12 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
           </select>
         </div>
       </div>
-      <!-- 補登模式 -->
-      <div style="margin-bottom:14px">
-        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--pale);border-radius:var(--rsm);cursor:pointer" onclick="toggleHistMode()">
-          <div style="flex:1;font-size:13px;font-weight:600;color:var(--txm)">📅 補登舊資料模式</div>
-          <div id="histToggle" style="width:36px;height:20px;background:#CCC;border-radius:99px;position:relative;transition:background .2s">
-            <div style="position:absolute;top:2px;left:2px;width:16px;height:16px;background:white;border-radius:50%;transition:left .2s" id="histKnob"></div>
-          </div>
-        </div>
-        <div id="histDateRow" style="display:none;margin-top:8px">
-          <div style="background:#FFF8E0;border-radius:var(--rsm);padding:10px 14px;font-size:12px;color:#7A5800;margin-bottom:8px;line-height:1.5">
-            📌 補登記錄<b>不影響帳戶餘額</b>，只用於報表分析。請確保起始值已設為目前真實餘額。
-          </div>
-          <div class="fg" style="margin-bottom:0">
-            <label class="flbl">交易日期</label>
-            <input type="date" class="finp" id="histDateInp">
-          </div>
+      <!-- 交易日期 -->
+      <div class="fg">
+        <label class="flbl">交易日期</label>
+        <input type="date" class="finp" id="histDateInp" onchange="onTxDateChange()">
+        <div id="sealedWarning" style="display:none;margin-top:6px;padding:8px 12px;background:#FFF8E0;border-radius:var(--rxs);font-size:12px;color:#7A5800">
+          ⚠️ 此月份已封存，這筆記錄<b>不會影響帳戶餘額</b>，僅做記錄用途。
         </div>
       </div>
       <button class="btn-main" onclick="addTx()">記帳 ☀️</button>
@@ -602,17 +592,6 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
 
 <!-- ══ 設定 ══ -->
 <div id="pg-settings" class="pg">
-  <!-- 危險操作 -->
-  <div class="card">
-    <div class="card-ttl">⚠️ 帳戶管理</div>
-    <div style="font-size:13px;color:var(--txm);margin-bottom:12px;line-height:1.6">
-      清空所有帳戶後，請重新建立帳戶並設定起始金額。交易記錄不會刪除。
-    </div>
-    <button onclick="clearAllAccounts()" style="width:100%;padding:13px;background:none;border:1.5px solid #D94040;border-radius:var(--rsm);font-family:inherit;font-size:14px;font-weight:700;color:#D94040;cursor:pointer;">
-      🗑 清空所有帳戶
-    </button>
-  </div>
-
   <!-- 主題 -->
   <div class="card">
     <div class="card-ttl">🎨 主題色系</div>
@@ -807,6 +786,17 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
       <div class="scard"><div class="scard-lbl">尚欠</div><div class="scard-val" style="font-size:16px;color:#D94040" id="clmOwed">$0</div></div>
     </div>
     <div id="claimList"></div>
+  </div>
+
+  <!-- 帳戶管理 -->
+  <div class="card">
+    <div class="card-ttl">⚠️ 帳戶管理</div>
+    <div style="font-size:13px;color:var(--txm);margin-bottom:12px;line-height:1.6">
+      清空所有帳戶後，請重新建立帳戶並設定起始金額。交易記錄不會刪除。建議先匯出 Excel 備份。
+    </div>
+    <button onclick="clearAllAccounts()" style="width:100%;padding:13px;background:none;border:1.5px solid #D94040;border-radius:var(--rsm);font-family:inherit;font-size:14px;font-weight:700;color:#D94040;cursor:pointer;">
+      🗑 清空所有帳戶
+    </button>
   </div>
 
   <!-- 匯出 -->
@@ -1068,13 +1058,22 @@ window.loadFromSheets = async () => {
     const json = await res.json();
     if (!json.ok) throw new Error(json.error);
     const sd = json.data;
-    // merge into D, keeping structure
-    if (sd.txs?.length)       D.txs       = sd.txs;
-    if (sd.accounts?.length)  D.accounts  = sd.accounts;
-    if (sd.cats?.length)      D.cats      = sd.cats;
-    if (sd.fixedExp?.length)  D.fixedExp  = sd.fixedExp;
-    if (sd.snapshots?.length) D.snapshots = sd.snapshots;
-    if (sd.claims?.length)    D.claims    = sd.claims;
+    // 以資料筆數多的為主，避免空的 Sheets 覆蓋本機資料
+    const localTxs = D.txs||[];
+    const sheetTxs = sd.txs||[];
+    if (sheetTxs.length >= localTxs.length) {
+      // Sheets 資料較多或相同 → 用 Sheets
+      if (sd.txs?.length)       D.txs       = sd.txs;
+      if (sd.accounts?.length)  D.accounts  = sd.accounts;
+      if (sd.cats?.length)      D.cats      = sd.cats;
+      if (sd.fixedExp?.length)  D.fixedExp  = sd.fixedExp;
+      if (sd.snapshots?.length) D.snapshots = sd.snapshots;
+      if (sd.claims?.length)    D.claims    = sd.claims;
+    } else {
+      // 本機資料較多 → 保留本機，並上傳到 Sheets
+      showSync('本機資料較新，上傳中...', 'sync-ing');
+      setTimeout(()=>window.saveToSheets(), 500);
+    }
     // also save to localStorage as cache
     localStorage.setItem('fd2', JSON.stringify(D));
     showSync('✓ 已同步', 'sync-ok');
@@ -1210,7 +1209,6 @@ let selAccEmoji = '🏦';
 let selCatEmoji = '📦';
 let selFxEmoji = '💳';
 let currentTheme = localStorage.getItem('fTheme') || 'A';
-let histMode = false;
 
 // ══ SAVE / HELPERS ══
 function save() {
@@ -1296,6 +1294,11 @@ function setTxType(t) {
     document.getElementById('accLabel').textContent = t==='exp'?'從帳戶扣':'入帳帳戶';
     const rs = document.getElementById('repayClaimSection');
     if (rs) rs.style.display='none';
+    // set date to today
+    const di = document.getElementById('histDateInp');
+    if (di && !di.value) di.value = getTK();
+    const sw = document.getElementById('sealedWarning');
+    if (sw) sw.style.display='none';
   } else if (t==='trf') {
     renderTrfSels();
   } else if (t==='clm') {
@@ -1312,23 +1315,13 @@ function renderCatGrid() {
       <span class="ce">${c.emoji}</span>${c.name}
     </button>`).join('');
 }
-function toggleHistMode() {
-  histMode = !histMode;
-  const knob = document.getElementById('histKnob');
-  const toggle = document.getElementById('histToggle');
-  const dateRow = document.getElementById('histDateRow');
-  if (histMode) {
-    toggle.style.background = 'var(--a1)';
-    knob.style.left = '18px';
-    dateRow.style.display = 'block';
-    // default to yesterday
-    const y = new Date(); y.setDate(y.getDate()-1);
-    document.getElementById('histDateInp').value = y.toISOString().slice(0,10);
-  } else {
-    toggle.style.background = '#CCC';
-    knob.style.left = '2px';
-    dateRow.style.display = 'none';
-  }
+function onTxDateChange() {
+  const val = document.getElementById('histDateInp').value;
+  if (!val) return;
+  const mk = val.slice(0,7);
+  const isSealed = (D.snapshots||[]).some(s=>s.mk===mk);
+  const warning = document.getElementById('sealedWarning');
+  if (warning) warning.style.display = isSealed ? 'block' : 'none';
 }
 
 function pickCat(id) {
@@ -1406,24 +1399,19 @@ function addTx() {
     return;
   }
 
-  let dk = getTK();
-  let mk2 = curMK();
-  let isHist = false;
-  if (histMode) {
-    const hd = document.getElementById('histDateInp').value;
-    if (!hd) { toast('請選擇日期'); return; }
-    dk = hd;
-    mk2 = hd.slice(0,7);
-    isHist = true;
-  }
+  const hd = document.getElementById('histDateInp').value || getTK();
+  const dk = hd;
+  const mk2 = hd.slice(0,7);
+  // 判斷是否已封存月份
+  const isSealed = (D.snapshots||[]).some(s=>s.mk===mk2);
   const tx = {id:'tx'+Date.now(), type:txType, amt, cat:selCat, acc, note, mk:mk2, dk, ts:Date.now()};
-  if (isHist) tx.historical = true;
+  if (isSealed) tx.historical = true;
   D.txs.push(tx);
   save();
   document.getElementById('amtInp').value='';
   document.getElementById('noteInp').value='';
   selCat=null;
-  toast(isHist?'補登成功 📅':txType==='inc'?'收入已記錄 💰':'記帳成功！☀️');
+  toast(isSealed?'已記錄（封存月份，不影響餘額）📅':txType==='inc'?'收入已記錄 💰':'記帳成功！☀️');
   renderCatGrid(); renderHome();
 }
 
