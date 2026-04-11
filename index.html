@@ -1226,6 +1226,11 @@ function getTK() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
+function fmtDk(dk) {
+  if (!dk) return '';
+  // strip time part if present (e.g. 2026-04-10T16:00:00.000Z → 2026-04-10)
+  return dk.slice(0,10);
+}
 function curMK() { return getMK(new Date()); }
 function calcBudget() { return D.cats.reduce((s,c)=>s+(c.budget||0),0); }
 function toast(msg) {
@@ -1401,7 +1406,7 @@ function addTx() {
 
   const hd = document.getElementById('histDateInp').value || getTK();
   const dk = hd;
-  const mk2 = hd.slice(0,7);
+  const mk2 = hd.slice(0,7).replace('T','').slice(0,7);
   // 判斷是否已封存月份
   const isSealed = (D.snapshots||[]).some(s=>s.mk===mk2);
   const tx = {id:'tx'+Date.now(), type:txType, amt, cat:selCat, acc, note, mk:mk2, dk, ts:Date.now()};
@@ -1493,14 +1498,14 @@ function deleteTx(id) {
 // ══ RENDER HOME ══
 function renderHome() {
   const mk = curMK();
-  const txs = D.txs.filter(t=>t.mk===mk);
+  const txs = D.txs.filter(t=>(t.mk||'').slice(0,7)===mk || (t.dk||'').slice(0,7)===mk);
   const exps = txs.filter(t=>t.type==='exp');
   const incs = txs.filter(t=>t.type==='inc');
   const budgetCatIds = new Set(D.cats.filter(c=>c.budget).map(c=>c.id));
   const budgetSpent = exps.filter(e=>budgetCatIds.has(e.cat)).reduce((s,e)=>s+e.amt,0);
   const totalExp = exps.reduce((s,e)=>s+e.amt,0);
   const totalInc = incs.reduce((s,e)=>s+e.amt,0);
-  const todayExp = exps.filter(e=>e.dk===getTK()).reduce((s,e)=>s+e.amt,0);
+  const todayExp = exps.filter(e=>(e.dk||'').slice(0,10)===getTK()).reduce((s,e)=>s+e.amt,0);
   const BUDGET = calcBudget();
   const left = Math.max(0, BUDGET-budgetSpent);
   const pct = BUDGET>0?Math.max(0,Math.min(100,(left/BUDGET)*100)):100;
@@ -1557,7 +1562,7 @@ function renderHome() {
             <div class="tx-ico trf">↔</div>
             <div class="tx-info">
               <div class="tx-name">${tx.note||'轉帳'}</div>
-              <div class="tx-meta">${tx.dk} · ${fa?.name||'?'} → ${ta?.name||'?'}</div>
+              <div class="tx-meta">${fmtDk(tx.dk)} · ${fa?.name||'?'} → ${ta?.name||'?'}</div>
             </div>
             <div class="tx-amt trf">${fmt(tx.amt)}</div>
             <button class="tx-del" onclick="openEditTx('${tx.id}')" style="opacity:0.4;font-size:13px" title="編輯">✏️</button>
@@ -1571,7 +1576,7 @@ function renderHome() {
             <div class="tx-ico clm">${isSettle?'✅':'🧾'}</div>
             <div class="tx-info">
               <div class="tx-name">${tx.note}</div>
-              <div class="tx-meta">${tx.dk} · ${acc2?.name||'?'} <span class="tag" style="background:#FFF8E0;color:#A07000">${isSettle?'回款沖銷':'報帳墊款'}</span></div>
+              <div class="tx-meta">${fmtDk(tx.dk)} · ${acc2?.name||'?'} <span class="tag" style="background:#FFF8E0;color:#A07000">${isSettle?'回款沖銷':'報帳墊款'}</span></div>
             </div>
             <div class="tx-amt clm">${isSettle?'+':'−'}${fmt(tx.amt)}</div>
             <button class="tx-del" onclick="openEditTx('${tx.id}')" style="opacity:0.4;font-size:13px" title="編輯">✏️</button>
@@ -1585,7 +1590,7 @@ function renderHome() {
           <div class="tx-ico ${tx.type}">${cat.emoji}</div>
           <div class="tx-info">
             <div class="tx-name">${tx.note||cat.name}</div>
-            <div class="tx-meta">${tx.dk} · ${acc?.name||'?'} <span class="tag ${tx.type}">${tx.type==='inc'?'收入':'支出'}</span>${tx.historical?` <span style="font-size:10px;background:#EEF0F8;color:#6070B0;padding:2px 5px;border-radius:99px;font-weight:700">補登</span>`:''}</div>
+            <div class="tx-meta">${fmtDk(tx.dk)} · ${acc?.name||'?'} <span class="tag ${tx.type}">${tx.type==='inc'?'收入':'支出'}</span>${tx.historical?` <span style="font-size:10px;background:#EEF0F8;color:#6070B0;padding:2px 5px;border-radius:99px;font-weight:700">補登</span>`:''}</div>
           </div>
           <div class="tx-amt ${tx.type}">${tx.type==='inc'?'+':'−'}${fmt(tx.amt)}</div>
           <button class="tx-del" onclick="openEditTx('${tx.id}')" style="opacity:0.4;font-size:13px" title="編輯">✏️</button>
@@ -2267,7 +2272,7 @@ function renderCreditBilling() {
           </div>
           <div class="bill-info">
             <div class="bill-name">${tx.note||cat.name}</div>
-            <div class="bill-meta">${tx.dk} · ${cat.name}</div>
+            <div class="bill-meta">${fmtDk(tx.dk)} · ${cat.name}</div>
           </div>
           <div class="bill-amt">${fmt(tx.amt)}</div>
         </div>`;
