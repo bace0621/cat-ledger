@@ -331,7 +331,10 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
       <ellipse cx="18.5" cy="9.5" rx="2.2" ry="2.6" style="fill:rgba(255,255,255,0.92)"/>
     </svg>
   </span>貓貓帳務所</div>
-  <div class="hdr-date" id="hdrDate"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
+    <div class="hdr-date" id="hdrDate"></div>
+    <button onclick="manualSync()" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);border-radius:99px;color:white;font-family:inherit;font-size:11px;font-weight:600;padding:4px 12px;cursor:pointer;">🔄 同步</button>
+  </div>
   <div class="user-bar">
     <img id="userAvatar" class="user-avatar" src="" style="display:none">
     <span id="userName" class="user-name"></span>
@@ -348,7 +351,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
     <div class="hero-amt" id="budgetLeft">$0</div>
     <div class="hero-sub" id="budgetSub"></div>
     <div class="hero-bar-bg"><div class="hero-bar" id="budgetBar" style="width:100%"></div></div>
-    <button onclick="manualSync()" style="margin-top:12px;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);border-radius:99px;color:white;font-family:inherit;font-size:12px;font-weight:600;padding:6px 14px;cursor:pointer;">🔄 手動同步</button>
+
   </div>
 
   <div class="sgrid">
@@ -759,6 +762,12 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
     <div id="snapshotTable"></div>
   </div>
 
+  <!-- 每月收支長條 -->
+  <div class="card">
+    <div class="card-ttl">📊 每月收支比較</div>
+    <div class="chart-wrap"><canvas id="barChart"></canvas></div>
+  </div>
+
   <!-- 淨資產趨勢 -->
   <div class="card">
     <div class="card-ttl">📈 淨資產趨勢</div>
@@ -769,12 +778,6 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
   <div class="card">
     <div class="card-ttl">🍩 本月收支分佈</div>
     <div class="chart-wrap"><canvas id="pieChart"></canvas></div>
-  </div>
-
-  <!-- 每月收支長條 -->
-  <div class="card">
-    <div class="card-ttl">📊 每月收支比較</div>
-    <div class="chart-wrap"><canvas id="barChart"></canvas></div>
   </div>
 
   <!-- 報帳本 -->
@@ -1527,7 +1530,7 @@ function renderHome() {
     const isOver = spent>cat.budget;
     const cls = pctU<70?'bar-ok':pctU<100?'bar-warn':'bar-over';
     const rem = cat.budget-spent;
-    return `<div class="sb-item">
+    return `<div class="sb-item" onclick="toggleSubDetail('${cat.id}')" style="cursor:pointer">
       <div class="sb-ico">${cat.emoji}</div>
       <div class="sb-info">
         <div class="sb-name">${cat.name}</div>
@@ -1537,6 +1540,10 @@ function renderHome() {
         <div class="sb-spent" style="color:${isOver?'#D94040':'var(--a2)'}">${fmt(spent)}</div>
         <div class="sb-of">${isOver?'超支 '+fmt(-rem):'剩 '+fmt(rem)}</div>
       </div>
+    </div>
+    <div id="subDetail_${cat.id}" style="display:none;padding:8px 0 4px 40px;border-bottom:1px solid var(--bdr)">
+      ${D.txs.filter(t=>((t.mk||'').slice(0,7)===curMK()||(t.dk||'').slice(0,7)===curMK())&&t.type==='exp'&&t.cat==='${cat.id}'&&!t.historical).sort((a,b)=>b.ts-a.ts).map(t=>`<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0"><span style="color:var(--txm)">${fmtDk(t.dk)} ${t.note||''}</span><span style="font-weight:700;color:var(--a2)">-${fmt(t.amt)}</span></div>`).join('') || '<div style="font-size:12px;color:var(--txl)">尚無消費</div>'
+      }
     </div>`;
   }).join('') || '<div class="empty"><p>尚未設定子預算</p></div>';
 
@@ -1620,10 +1627,16 @@ function renderAccounts() {
 
   // Account list
   const typeLabel = {bank:'銀行',cash:'現金',credit:'信用卡',invest:'投資',insurance:'儲蓄險',loan:'貸款'};
-  document.getElementById('accList').innerHTML = D.accounts.map(a=>{
+  const typeOrder = {cash:1, credit:2, bank:3, loan:4, invest:5, insurance:6};
+  const typeLabel2 = {bank:'銀行帳戶',cash:'現金',credit:'信用卡',invest:'投資',insurance:'儲蓄險',loan:'貸款'};
+  const sortedAccs = [...D.accounts].sort((a,b)=>(typeOrder[a.type]||9)-(typeOrder[b.type]||9));
+  let lastType2 = null;
+  document.getElementById('accList').innerHTML = sortedAccs.map(a=>{
     const bal = getAccBal(a.id);
     const isNeg = bal<0;
-    return `<div class="acc-row">
+    const sep = lastType2 !== a.type ? `<div style="font-size:10px;font-weight:700;color:var(--txl);text-transform:uppercase;letter-spacing:.06em;padding:10px 0 4px;margin-top:${lastType2?'4px':'0'};border-top:${lastType2?'1px solid var(--bdr)':'none'}">${typeLabel2[a.type]||a.type}</div>` : '';
+    lastType2 = a.type;
+    return sep + `<div class="acc-row">
       <div class="acc-row-ico" style="background:none;padding:0">${a.bankIcon ? `<img class="bank-icon" src="${bankIconUrl(a.bankIcon)}" alt="${a.name}">` : `<span style="font-size:18px;width:34px;height:34px;background:var(--pale);border-radius:8px;display:flex;align-items:center;justify-content:center">${a.emoji}</span>`}</div>
       <div class="acc-row-info">
         <div class="acc-row-name">${a.name}${a.archived?` <span style="font-size:10px;background:#F0EDEA;color:#A09080;padding:2px 6px;border-radius:99px;font-weight:700">封存</span>`:''}</div>
@@ -1868,7 +1881,10 @@ function renderFixedExpList() {
             <div class="acc-row-name">${fx.name}</div>
             <div class="acc-row-type">${acc?acc.name:'未知帳戶'} · 每月${fx.day||1}號 · ${fmt(fx.amt)}</div>
           </div>
-          <button class="btn-sm danger" onclick="deleteFixedExp('${fx.id}')" style="font-size:11px;padding:5px 9px">刪除</button>
+          <div style="display:flex;gap:4px">
+            <button class="btn-sm ghost" onclick="editFixedDay('${fx.id}')" style="font-size:11px;padding:5px 9px">改日期</button>
+            <button class="btn-sm danger" onclick="deleteFixedExp('${fx.id}')" style="font-size:11px;padding:5px 9px">刪除</button>
+          </div>
         </div>`;
       }).join('');
   // populate selects
@@ -1898,6 +1914,19 @@ function addFixedExp() {
   selFxEmoji='💳';
   document.getElementById('newFxEmojiDisplay').textContent='💳';
   toast('固定扣款已新增 ✓');
+  renderFixedExpList();
+}
+
+function editFixedDay(id) {
+  const fx = (D.fixedExp||[]).find(f=>f.id===id);
+  if (!fx) return;
+  const newDay = prompt(`「${fx.name}」目前扣款日：${fx.day}號\n請輸入新的扣款日（1-28）：`, fx.day);
+  if (!newDay) return;
+  const d = parseInt(newDay);
+  if (isNaN(d) || d < 1 || d > 28) { toast('請輸入 1-28 之間的數字'); return; }
+  fx.day = d;
+  save();
+  toast(`已改為每月 ${d} 號扣款 ✓`);
   renderFixedExpList();
 }
 
@@ -2694,6 +2723,13 @@ function calcEqual() {
     document.getElementById('calcDisplay').textContent = '錯誤';
     calcExpr = '';
   }
+}
+
+// ══ SUB DETAIL ══
+function toggleSubDetail(catId) {
+  const el = document.getElementById('subDetail_' + catId);
+  if (!el) return;
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 
 // ══ SEARCH ══
