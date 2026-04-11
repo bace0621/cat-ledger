@@ -484,6 +484,12 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
     </div>
   </div>
 
+  <!-- 本月收支分布 -->
+  <div class="card">
+    <div class="card-ttl">🍩 本月收支分布</div>
+    <div style="position:relative;width:100%;height:180px"><canvas id="homePieChart"></canvas></div>
+  </div>
+
   <!-- 子預算 -->
   <div class="card">
     <div class="card-ttl">子預算追蹤</div>
@@ -502,39 +508,14 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
 
 <!-- ══ 帳戶 ══ -->
 <div id="pg-accounts" class="pg">
+
+  <!-- 帳戶總覽 -->
   <div class="card">
     <div class="card-ttl">帳戶總覽</div>
     <div id="accSummary"></div>
   </div>
 
-  <!-- 信用卡帳單 -->
-  <div class="card" id="creditBillingCard" style="display:none">
-    <div class="card-ttl">💳 信用卡帳單對帳</div>
-    <div id="creditBillingList"></div>
-  </div>
-  <!-- 報帳本 -->
-  <div class="card">
-    <div class="card-ttl">🧾 報帳本</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
-      <div class="scard"><div class="scard-lbl">共墊出</div><div class="scard-val" style="font-size:14px;color:#B07800" id="accClmTotal">$0</div></div>
-      <div class="scard"><div class="scard-lbl">已回收</div><div class="scard-val" style="font-size:14px;color:#2A9A58" id="accClmRecovered">$0</div></div>
-      <div class="scard"><div class="scard-lbl">尚欠</div><div class="scard-val" style="font-size:14px;color:#D94040" id="accClmOwed">$0</div></div>
-    </div>
-    <div id="accClaimList"></div>
-  </div>
-
-  <!-- 封存本月 -->
-  <div class="card">
-    <div class="card-ttl">📦 封存本月</div>
-    <div style="font-size:12px;color:var(--txm);margin-bottom:12px;line-height:1.6">銀行帳單和信用卡都對完後，封存記錄本月餘額快照。</div>
-    <div class="fg">
-      <label class="flbl">選擇月份</label>
-      <input type="month" class="finp" id="sealMonthInpAcc">
-    </div>
-    <div id="sealStatusAcc" style="font-size:13px;font-weight:600;margin-bottom:12px"></div>
-    <button class="seal-btn" onclick="sealMonthAcc()">📦 封存</button>
-  </div>
-
+  <!-- 所有帳戶 + 新增 -->
   <div class="card" id="accListCard">
     <div class="card-ttl">所有帳戶</div>
     <div id="accList"></div>
@@ -562,36 +543,15 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
         📌 這是帳本的起始基準。之後每筆記帳都會在這個金額上加減，請填入今天這個帳戶的真實金額。
       </div>
     </div>
-    <!-- 貸款專用欄位 -->
     <div id="loanFields" style="display:none">
       <div style="background:var(--pale);border-radius:var(--rsm);padding:12px;margin-bottom:14px;font-size:12px;color:var(--txm);line-height:1.6">
         🏠 填入貸款資料後，每月本金和利息會自動計算，不需要手動查銀行 App。
       </div>
-      <div class="fg">
-        <label class="flbl">貸款總金額</label>
-        <input type="number" class="finp" id="newLoanTotal" placeholder="例：8000000" inputmode="decimal">
-      </div>
-      <div class="fg">
-        <label class="flbl">年利率 (%)</label>
-        <input type="number" class="finp" id="newLoanRate" placeholder="例：2.06" step="0.01" inputmode="decimal">
-      </div>
-      <div class="fg">
-        <label class="flbl">貸款年限</label>
-        <select class="finp" id="newLoanYears">
-          <option value="20">20 年</option>
-          <option value="30" selected>30 年</option>
-          <option value="40">40 年</option>
-        </select>
-      </div>
-      <div class="fg">
-        <label class="flbl">第一期還款日</label>
-        <input type="month" class="finp" id="newLoanStart">
-      </div>
-      <div class="fg">
-        <label class="flbl">已還期數</label>
-        <input type="number" class="finp" id="newLoanPaid" placeholder="0（剛開始還填0）" inputmode="numeric">
-        <div style="font-size:11px;color:var(--txl);margin-top:6px">📌 系統會根據已還期數自動計算目前剩餘本金</div>
-      </div>
+      <div class="fg"><label class="flbl">貸款總金額</label><input type="number" class="finp" id="newLoanTotal" placeholder="例：8000000" inputmode="decimal"></div>
+      <div class="fg"><label class="flbl">年利率 (%)</label><input type="number" class="finp" id="newLoanRate" placeholder="例：2.06" step="0.01" inputmode="decimal"></div>
+      <div class="fg"><label class="flbl">貸款年限</label><select class="finp" id="newLoanYears"><option value="20">20 年</option><option value="30" selected>30 年</option><option value="40">40 年</option></select></div>
+      <div class="fg"><label class="flbl">第一期還款日</label><input type="month" class="finp" id="newLoanStart"></div>
+      <div class="fg"><label class="flbl">已還期數</label><input type="number" class="finp" id="newLoanPaid" placeholder="0" inputmode="numeric"><div style="font-size:11px;color:var(--txl);margin-top:6px">📌 系統會根據已還期數自動計算目前剩餘本金</div></div>
     </div>
     <div class="fg">
       <label class="flbl">圖示</label>
@@ -614,6 +574,36 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
     </div>
     <button class="btn-main" onclick="addAccount()">新增帳戶</button>
   </div>
+
+  <!-- 信用卡帳單對帳 -->
+  <div class="card" id="creditBillingCard" style="display:none">
+    <div class="card-ttl">💳 信用卡帳單對帳</div>
+    <div id="creditBillingList"></div>
+  </div>
+
+  <!-- 報帳本 -->
+  <div class="card">
+    <div class="card-ttl">🧾 報帳本</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+      <div class="scard"><div class="scard-lbl">共墊出</div><div class="scard-val" style="font-size:14px;color:#B07800" id="accClmTotal">$0</div></div>
+      <div class="scard"><div class="scard-lbl">已回收</div><div class="scard-val" style="font-size:14px;color:#2A9A58" id="accClmRecovered">$0</div></div>
+      <div class="scard"><div class="scard-lbl">尚欠</div><div class="scard-val" style="font-size:14px;color:#D94040" id="accClmOwed">$0</div></div>
+    </div>
+    <div id="accClaimList"></div>
+  </div>
+
+  <!-- 封存本月 -->
+  <div class="card">
+    <div class="card-ttl">📦 封存本月</div>
+    <div style="font-size:12px;color:var(--txm);margin-bottom:12px;line-height:1.6">銀行帳單和信用卡都對完後，封存記錄本月餘額快照。</div>
+    <div class="fg">
+      <label class="flbl">選擇月份</label>
+      <input type="month" class="finp" id="sealMonthInpAcc">
+    </div>
+    <div id="sealStatusAcc" style="font-size:13px;font-weight:600;margin-bottom:12px"></div>
+    <button class="seal-btn" onclick="sealMonthAcc()">📦 封存</button>
+  </div>
+
 </div>
 
 <!-- ══ 設定 ══ -->
@@ -756,6 +746,17 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
       </div>
     </div>
   </div>
+
+  <!-- 帳戶管理 -->
+  <div class="card" style="border:1.5px solid #D94040">
+    <div class="card-ttl" style="color:#D94040">⚠️ 帳戶管理</div>
+    <div style="font-size:13px;color:var(--txm);margin-bottom:12px;line-height:1.6">
+      清空所有帳戶後請重新建立。交易記錄不會刪除，建議先匯出 Excel 備份。
+    </div>
+    <button onclick="clearAllAccounts()" style="width:100%;padding:13px;background:none;border:1.5px solid #D94040;border-radius:var(--rsm);font-family:inherit;font-size:14px;font-weight:700;color:#D94040;cursor:pointer;">
+      🗑 清空所有帳戶
+    </button>
+  </div>
 </div>
 
 <!-- ══ 報表 ══ -->
@@ -789,16 +790,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
 
 
 
-  <!-- 帳戶管理 -->
-  <div class="card">
-    <div class="card-ttl">⚠️ 帳戶管理</div>
-    <div style="font-size:13px;color:var(--txm);margin-bottom:12px;line-height:1.6">
-      清空所有帳戶後，請重新建立帳戶並設定起始金額。交易記錄不會刪除。建議先匯出 Excel 備份。
-    </div>
-    <button onclick="clearAllAccounts()" style="width:100%;padding:13px;background:none;border:1.5px solid #D94040;border-radius:var(--rsm);font-family:inherit;font-size:14px;font-weight:700;color:#D94040;cursor:pointer;">
-      🗑 清空所有帳戶
-    </button>
-  </div>
+
 
   <!-- 匯出 -->
   <div class="card">
@@ -1518,6 +1510,7 @@ function renderHome() {
   document.getElementById('txCount').textContent = txs.length+' 筆';
   document.getElementById('totalIncome').textContent = fmt(totalInc);
   document.getElementById('todaySpent').textContent = fmt(todayExp);
+  renderHomePie();
 
   // Sub-budget
   const bycat = {};
@@ -2795,6 +2788,47 @@ function toggleSubDetail(catId) {
   } else {
     el.style.display = 'none';
   }
+}
+
+// ══ HOME PIE CHART ══
+function renderHomePie() {
+  const mk = curMK();
+  const exps = D.txs.filter(t=>
+    ((t.mk||'').slice(0,7)===mk||(t.dk||'').slice(0,7)===mk) &&
+    t.type==='exp' && !t.historical
+  );
+  const incs = D.txs.filter(t=>
+    ((t.mk||'').slice(0,7)===mk||(t.dk||'').slice(0,7)===mk) &&
+    t.type==='inc' && !t.historical
+  );
+  const totalExp = exps.reduce((s,e)=>s+e.amt,0);
+  const totalInc = incs.reduce((s,i)=>s+i.amt,0);
+  const canvas = document.getElementById('homePieChart');
+  if (!canvas) return;
+  destroyChart('homePie');
+  if (totalExp===0 && totalInc===0) {
+    canvas.parentElement.innerHTML = '<div style="height:180px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--txl)">本月尚無記錄</div>';
+    return;
+  }
+  // breakdown by category
+  const byCat = {};
+  exps.forEach(t=>{ byCat[t.cat]=(byCat[t.cat]||0)+t.amt; });
+  const entries = Object.entries(byCat).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const pieColors = ['#F2A93B','#F28B70','#6090E0','#2A9A58','#E08030','#9060C0'];
+  chartInsts['homePie'] = new Chart(canvas, {
+    type:'doughnut',
+    data:{
+      labels: entries.map(([id])=>{ const ct=[...D.cats,...INC_CATS].find(c=>c.id===id); return ct?ct.emoji+ct.name:id; }),
+      datasets:[{ data:entries.map(([,v])=>v), backgroundColor:pieColors, borderWidth:2, borderColor:'#fff' }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:true,position:'right',labels:{font:{size:10},boxWidth:10,padding:6}},
+        tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${fmt(ctx.raw)}`}}
+      }
+    }
+  });
 }
 
 // ══ SEARCH ══
