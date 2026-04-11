@@ -761,19 +761,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
 <!-- ══ 報表 ══ -->
 <div id="pg-report" class="pg">
 
-  <!-- 封存 -->
-  <div class="card">
-    <div class="card-ttl">📦 封存月份</div>
-    <div style="font-size:12px;color:var(--txm);margin-bottom:14px;line-height:1.6">
-      封存會記錄該月各帳戶餘額快照。可重複封存覆蓋，隨時補登後再重新封存。
-    </div>
-    <div class="fg">
-      <label class="flbl">選擇月份</label>
-      <input type="month" class="finp" id="sealMonthInp">
-    </div>
-    <div id="sealStatus" style="font-size:13px;font-weight:600;margin-bottom:12px"></div>
-    <button class="seal-btn" onclick="sealMonth()">📦 封存選定月份</button>
-  </div>
+
 
   <!-- 資產負債表 -->
   <div class="card">
@@ -1993,16 +1981,21 @@ function renderClaimList() {
   const totalOut = claims.reduce((s,c)=>s+c.amt,0);
   const recovered = claims.filter(c=>c.status==='done').reduce((s,c)=>s+c.amt,0);
   const owed = totalOut - recovered;
-  document.getElementById('clmTotal').textContent = fmt(totalOut);
-  document.getElementById('clmRecovered').textContent = fmt(recovered);
-  document.getElementById('clmOwed').textContent = fmt(owed);
+  const clmTotalEl = document.getElementById('clmTotal');
+  const clmRecEl = document.getElementById('clmRecovered');
+  const clmOwedEl = document.getElementById('clmOwed');
+  const claimListEl = document.getElementById('claimList');
+  if (clmTotalEl) clmTotalEl.textContent = fmt(totalOut);
+  if (clmRecEl) clmRecEl.textContent = fmt(recovered);
+  if (clmOwedEl) clmOwedEl.textContent = fmt(owed);
+  if (!claimListEl) return;
 
   if (!claims.length) {
-    document.getElementById('claimList').innerHTML = '<div class="empty"><p>尚無報帳記錄</p></div>';
+    claimListEl.innerHTML = '<div class="empty"><p>尚無報帳記錄</p></div>';
     return;
   }
   const sorted = [...claims].sort((a,b)=>b.ts-a.ts);
-  document.getElementById('claimList').innerHTML = sorted.map(clm=>{
+  claimListEl.innerHTML = sorted.map(clm=>{
     const isPending = clm.status==='pending';
     const acc = D.accounts.find(a=>a.id===clm.acc);
     return `<div class="claim-item">
@@ -2020,16 +2013,8 @@ function renderClaimList() {
 }
 
 function renderReport() {
-  if (!document.getElementById('sealMonthInp')) return;
   renderClaimList();
-  // Seal status
   const mk = curMK();
-  // init month selector to last month
-  const sealInp = document.getElementById('sealMonthInp');
-  const lastMonth = new Date(); lastMonth.setMonth(lastMonth.getMonth()-1);
-  if (!sealInp.value) sealInp.value = getMK(lastMonth);
-  sealInp.onchange = ()=>updateSealStatus(sealInp.value);
-  updateSealStatus(sealInp.value);
 
   // Snapshot table
   const snaps = (D.snapshots||[]).slice().sort((a,b)=>a.mk.localeCompare(b.mk));
