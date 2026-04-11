@@ -1541,10 +1541,7 @@ function renderHome() {
         <div class="sb-of">${isOver?'超支 '+fmt(-rem):'剩 '+fmt(rem)}</div>
       </div>
     </div>
-    <div id="subDetail_${cat.id}" style="display:none;padding:8px 0 4px 40px;border-bottom:1px solid var(--bdr)">
-      ${D.txs.filter(t=>((t.mk||'').slice(0,7)===curMK()||(t.dk||'').slice(0,7)===curMK())&&t.type==='exp'&&t.cat==='${cat.id}'&&!t.historical).sort((a,b)=>b.ts-a.ts).map(t=>`<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0"><span style="color:var(--txm)">${fmtDk(t.dk)} ${t.note||''}</span><span style="font-weight:700;color:var(--a2)">-${fmt(t.amt)}</span></div>`).join('') || '<div style="font-size:12px;color:var(--txl)">尚無消費</div>'
-      }
-    </div>`;
+    <div id="subDetail_${cat.id}" style="display:none;padding:8px 0 4px 40px;border-bottom:1px solid var(--bdr)"></div>`;
   }).join('') || '<div class="empty"><p>尚未設定子預算</p></div>';
 
   // Recent txs (last 20)
@@ -2729,7 +2726,23 @@ function calcEqual() {
 function toggleSubDetail(catId) {
   const el = document.getElementById('subDetail_' + catId);
   if (!el) return;
-  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  if (el.style.display === 'none') {
+    // fill content
+    const mk = curMK();
+    const txs = D.txs.filter(t=>
+      ((t.mk||'').slice(0,7)===mk||(t.dk||'').slice(0,7)===mk) &&
+      t.type==='exp' && t.cat===catId && !t.historical
+    ).sort((a,b)=>b.ts-a.ts);
+    el.innerHTML = txs.length===0
+      ? '<div style="font-size:12px;color:var(--txl)">尚無消費</div>'
+      : txs.map(t=>`<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0">
+          <span style="color:var(--txm)">${fmtDk(t.dk)} ${t.note||''}</span>
+          <span style="font-weight:700;color:var(--a2)">-${fmt(t.amt)}</span>
+        </div>`).join('');
+    el.style.display = 'block';
+  } else {
+    el.style.display = 'none';
+  }
 }
 
 // ══ SEARCH ══
