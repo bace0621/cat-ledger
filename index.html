@@ -279,6 +279,14 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
 .seal-btn{width:100%;padding:14px;background:linear-gradient(135deg,#6070C8,#4050A0);border:none;border-radius:var(--rsm);font-family:inherit;font-size:15px;font-weight:700;color:#fff;cursor:pointer;transition:all .2s;box-shadow:0 4px 14px rgba(0,0,0,0.13);}
 .seal-btn:hover{opacity:.9;transform:translateY(-1px);}
 
+/* ── Onboarding ── */
+.onboard-screen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:500;padding:32px;text-align:center;}
+.onboard-title{font-family:'DM Serif Display',serif;font-size:24px;color:var(--tx);margin-bottom:8px;}
+.onboard-sub{font-size:14px;color:var(--txm);margin-bottom:32px;line-height:1.7;}
+.onboard-step{background:var(--surf);border-radius:var(--r);padding:16px;margin-bottom:12px;border:1px solid var(--bdr);text-align:left;width:100%;max-width:360px;}
+.onboard-step-title{font-size:13px;font-weight:700;margin-bottom:4px;}
+.onboard-step-sub{font-size:12px;color:var(--txl);}
+
 /* ── Login screen ── */
 .login-screen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;padding:32px;}
 .login-logo{margin-bottom:16px;}
@@ -308,6 +316,20 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
   <button class="login-btn" id="loginBtn" onclick="if(window.signInWithGoogle){window.signInWithGoogle()}else{alert('頁面載入中，請稍候再試')}"">
     <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
     使用 Google 帳號登入
+  </button>
+</div>
+
+<!-- Onboarding screen -->
+<div id="onboardScreen" class="onboard-screen" style="display:none">
+  <div style="font-size:52px;margin-bottom:12px">🐾</div>
+  <div class="onboard-title">歡迎來到貓貓帳務所</div>
+  <div class="onboard-sub">開始之前，先建立你的帳戶<br>之後每筆記帳都會知道錢從哪裡來、到哪裡去</div>
+  <div class="onboard-step">
+    <div class="onboard-step-title">💡 建議先建立這些帳戶</div>
+    <div class="onboard-step-sub">• 現金（皮夾裡的錢）<br>• 常用銀行帳戶<br>• 信用卡（如果有的話）</div>
+  </div>
+  <button class="btn-main" style="max-width:360px;width:100%" onclick="goToCreateAccount()">
+    + 建立我的第一個帳戶
   </button>
 </div>
 
@@ -602,6 +624,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
     </div>
     <div id="sealStatusAcc" style="font-size:13px;font-weight:600;margin-bottom:12px"></div>
     <button class="seal-btn" onclick="sealMonthAcc()">📦 封存</button>
+    <button onclick="unsealMonth()" style="width:100%;margin-top:8px;padding:12px;background:none;border:1.5px solid #D94040;border-radius:var(--rsm);font-family:inherit;font-size:14px;font-weight:600;color:#D94040;cursor:pointer;">🗑 刪除此月封存</button>
   </div>
 
 </div>
@@ -747,16 +770,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
     </div>
   </div>
 
-  <!-- 帳戶管理 -->
-  <div class="card" style="border:1.5px solid #D94040">
-    <div class="card-ttl" style="color:#D94040">⚠️ 帳戶管理</div>
-    <div style="font-size:13px;color:var(--txm);margin-bottom:12px;line-height:1.6">
-      清空所有帳戶後請重新建立。交易記錄不會刪除，建議先匯出 Excel 備份。
-    </div>
-    <button onclick="clearAllAccounts()" style="width:100%;padding:13px;background:none;border:1.5px solid #D94040;border-radius:var(--rsm);font-family:inherit;font-size:14px;font-weight:700;color:#D94040;cursor:pointer;">
-      🗑 清空所有帳戶
-    </button>
-  </div>
+
 </div>
 
 <!-- ══ 報表 ══ -->
@@ -1072,6 +1086,7 @@ window.loadFromSheets = async () => {
     showSync('✓ 已同步', 'sync-ok');
     autoAddFixed();
     renderHome();
+    checkOnboarding();
   } catch(e) {
     console.error('Load error:', e);
     showSync('⚠ 同步失敗，使用本機資料', 'sync-err');
@@ -1138,14 +1153,7 @@ const _origSave = function() { localStorage.setItem('fd2', JSON.stringify(D)); }
 
 // ══ DATA ══
 let D = JSON.parse(localStorage.getItem('fd2') || '{}');
-if (!D.accounts) D.accounts = [
-  {id:'a1', name:'薪轉帳戶',   type:'bank',      emoji:'💳', initBal:0},
-  {id:'a2', name:'數位帳戶',   type:'bank',      emoji:'📱', initBal:0},
-  {id:'a3', name:'現金',       type:'cash',      emoji:'💵', initBal:0},
-  {id:'a4', name:'信用卡',     type:'credit',    emoji:'💳', initBal:0},
-  {id:'a5', name:'00878 ETF', type:'invest',    emoji:'📈', initBal:0},
-  {id:'a6', name:'儲蓄險 A',  type:'insurance', emoji:'🔒', initBal:0},
-];
+if (!D.accounts) D.accounts = [];
 if (!D.cats) D.cats = [
   {id:'food',  name:'餐食',     emoji:'🍱', budget:5000},
   {id:'tran',  name:'交通',     emoji:'🚗', budget:2000},
@@ -1160,10 +1168,7 @@ if (!D.cats) D.cats = [
   {id:'other', name:'其他',     emoji:'📦'},
 ];
 if (!D.txs) D.txs = [];
-if (!D.fixedExp) D.fixedExp = [
-  {id:'fx1', name:'家用',  emoji:'🏠', cat:'home',  amt:5000,  acc:'a1', day:5},
-  {id:'fx2', name:'房貸',  emoji:'🏦', cat:'other', amt:15000, acc:'a1', day:10},
-];
+if (!D.fixedExp) D.fixedExp = [];
 
 const INC_CATS = [
   {id:'salary',  name:'薪資',     emoji:'💼'},
@@ -1339,8 +1344,12 @@ function pickCat(id) {
 
 // ══ ACCOUNT SELECTS ══
 function renderAccSel() {
-  const opts = D.accounts.filter(a=>!a.archived&&a.type!=='loan').map(a=>`<option value="${a.id}">${a.emoji} ${a.name}</option>`).join('');
-  document.getElementById('accSel').innerHTML = opts;
+  const accs = D.accounts.filter(a=>!a.archived&&a.type!=='loan');
+  if (!accs.length) {
+    document.getElementById('accSel').innerHTML = '<option value="">— 請先建立帳戶 —</option>';
+    return;
+  }
+  document.getElementById('accSel').innerHTML = accs.map(a=>`<option value="${a.id}">${a.emoji} ${a.name}</option>`).join('');
 }
 function renderTrfSels() {
   const opts = D.accounts.filter(a=>!a.archived).map(a=>`<option value="${a.id}">${a.emoji} ${a.name}</option>`).join('');
@@ -1402,7 +1411,8 @@ function addTx() {
   const mk2 = hd.slice(0,7).replace('T','').slice(0,7);
   // 判斷是否已封存月份
   const isSealed = (D.snapshots||[]).some(s=>s.mk===mk2);
-  const tx = {id:'tx'+Date.now(), type:txType, amt, cat:selCat, acc, note, mk:mk2, dk, ts:Date.now()};
+  const accObj = D.accounts.find(a=>a.id===acc);
+  const tx = {id:'tx'+Date.now(), type:txType, amt, cat:selCat, acc, accName:accObj?.name||'', note, mk:mk2, dk, ts:Date.now()};
   if (isSealed) tx.historical = true;
   D.txs.push(tx);
   save();
@@ -1421,7 +1431,9 @@ function addTransfer() {
   const note = document.getElementById('trfNote').value.trim();
   if (!amt||amt<=0) { toast('請輸入金額'); return; }
   if (from===to) { toast('來源與目標帳戶不能相同'); return; }
-  D.txs.push({id:'tx'+Date.now(), type:'trf', amt, from, to, note, mk:curMK(), dk:getTK(), ts:Date.now()});
+  const fromObj = D.accounts.find(a=>a.id===from);
+  const toObj = D.accounts.find(a=>a.id===to);
+  D.txs.push({id:'tx'+Date.now(), type:'trf', amt, from, to, fromName:fromObj?.name||'', toName:toObj?.name||'', note, mk:curMK(), dk:getTK(), ts:Date.now()});
   save();
   document.getElementById('trfAmt').value='';
   document.getElementById('trfNote').value='';
@@ -1557,7 +1569,7 @@ function renderHome() {
             <div class="tx-ico trf">↔</div>
             <div class="tx-info">
               <div class="tx-name">${tx.note||'轉帳'}</div>
-              <div class="tx-meta">${fmtDk(tx.dk)} · ${fa?.name||'?'} → ${ta?.name||'?'}</div>
+              <div class="tx-meta">${fmtDk(tx.dk)} · ${fa?.name||tx.fromName||'未知'} → ${ta?.name||tx.toName||'未知'}</div>
             </div>
             <div class="tx-amt trf">${fmt(tx.amt)}</div>
             <button class="tx-del" onclick="openEditTx('${tx.id}')" style="opacity:0.4;font-size:13px" title="編輯">✏️</button>
@@ -1571,7 +1583,7 @@ function renderHome() {
             <div class="tx-ico clm">${isSettle?'✅':'🧾'}</div>
             <div class="tx-info">
               <div class="tx-name">${tx.note}</div>
-              <div class="tx-meta">${fmtDk(tx.dk)} · ${acc2?.name||'?'} <span class="tag" style="background:#FFF8E0;color:#A07000">${isSettle?'回款沖銷':'報帳墊款'}</span></div>
+              <div class="tx-meta">${fmtDk(tx.dk)} · ${acc2?.name||'未知帳戶'} <span class="tag" style="background:#FFF8E0;color:#A07000">${isSettle?'回款沖銷':'報帳墊款'}</span></div>
             </div>
             <div class="tx-amt clm">${isSettle?'+':'−'}${fmt(tx.amt)}</div>
             <button class="tx-del" onclick="openEditTx('${tx.id}')" style="opacity:0.4;font-size:13px" title="編輯">✏️</button>
@@ -1585,7 +1597,7 @@ function renderHome() {
           <div class="tx-ico ${tx.type}">${cat.emoji}</div>
           <div class="tx-info">
             <div class="tx-name">${tx.note||cat.name}</div>
-            <div class="tx-meta">${fmtDk(tx.dk)} · ${acc?.name||'?'} <span class="tag ${tx.type}">${tx.type==='inc'?'收入':'支出'}</span>${tx.historical?` <span style="font-size:10px;background:#EEF0F8;color:#6070B0;padding:2px 5px;border-radius:99px;font-weight:700">補登</span>`:''}</div>
+            <div class="tx-meta">${fmtDk(tx.dk)} · ${acc?.name||tx.accName||'未知帳戶'} <span class="tag ${tx.type}">${tx.type==='inc'?'收入':'支出'}</span>${tx.historical?` <span style="font-size:10px;background:#EEF0F8;color:#6070B0;padding:2px 5px;border-radius:99px;font-weight:700">補登</span>`:''}</div>
           </div>
           <div class="tx-amt ${tx.type}">${tx.type==='inc'?'+':'−'}${fmt(tx.amt)}</div>
           <button class="tx-del" onclick="openEditTx('${tx.id}')" style="opacity:0.4;font-size:13px" title="編輯">✏️</button>
@@ -1616,7 +1628,7 @@ function renderAccounts() {
           <div class="claim-ico">${isPending?'🟡':'✅'}</div>
           <div class="claim-info">
             <div class="claim-name">${clm.note}</div>
-            <div class="claim-meta">${clm.dk} · ${acc?.name||'?'} · <span class="status-badge ${isPending?'status-pending':'status-done'}">${isPending?'待回帳':'已沖銷'}</span></div>
+            <div class="claim-meta">${clm.dk} · ${acc?.name||tx.accName||'未知帳戶'} · <span class="status-badge ${isPending?'status-pending':'status-done'}">${isPending?'待回帳':'已沖銷'}</span></div>
           </div>
           <div style="flex-shrink:0">
             <div class="claim-amt">${fmt(clm.amt)}</div>
@@ -1710,6 +1722,7 @@ function addAccount() {
   document.getElementById('newAccIconPreview').innerHTML = '🏦';
   document.getElementById('newAccIconLabel').textContent = '未選擇銀行 icon';
   toast('帳戶已新增 ✓');
+  closeOnboarding();
   renderAccounts();
   renderAccSel();
 }
@@ -1953,10 +1966,11 @@ function autoAddFixed() {
     // avoid duplicates within same month
     const already = D.txs.some(t=>t.type==='exp' && t.mk===mk && t.fixedId===fx.id);
     if (!already) {
+      const fxAcc = D.accounts.find(a=>a.id===fx.acc);
       D.txs.push({
         id:'tx'+Date.now()+'_'+fx.id,
         type:'exp', amt:fx.amt, cat:fx.cat,
-        acc:fx.acc, note:fx.name+'（固定）',
+        acc:fx.acc, accName:fxAcc?.name||'', note:fx.name+'（固定）',
         mk, dk:mk+'-'+String(fx.day||1).padStart(2,'0'), ts:Date.now(), fixedId:fx.id,
       });
     }
@@ -1995,7 +2009,7 @@ function renderClaimList() {
       <div class="claim-ico">${isPending?'🟡':'✅'}</div>
       <div class="claim-info">
         <div class="claim-name">${clm.note}</div>
-        <div class="claim-meta">${clm.dk} · ${acc?.name||'?'} · <span class="status-badge ${isPending?'status-pending':'status-done'}">${isPending?'待回帳':'已沖銷'}</span></div>
+        <div class="claim-meta">${clm.dk} · ${acc?.name||tx.accName||'未知帳戶'} · <span class="status-badge ${isPending?'status-pending':'status-done'}">${isPending?'待回帳':'已沖銷'}</span></div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
         <div class="claim-amt">${fmt(clm.amt)}</div>
@@ -2095,6 +2109,21 @@ function renderReport() {
 function var_txl(){ return getComputedStyle(document.body).getPropertyValue('--txl').trim()||'#B8A070'; }
 
 // ── Seal month ──
+function unsealMonth() {
+  const inp = document.getElementById('sealMonthInpAcc');
+  const mk = inp ? inp.value : curMK();
+  if (!mk) { toast('請先選擇月份'); return; }
+  const idx = (D.snapshots||[]).findIndex(s=>s.mk===mk);
+  if (idx < 0) { toast(`${mk} 沒有封存記錄`); return; }
+  if (!confirm(`確定刪除 ${mk} 的封存記錄？\n刪除後該月記帳會恢復正常計算餘額。`)) return;
+  D.snapshots.splice(idx, 1);
+  save();
+  toast(`${mk} 封存已刪除 ✓`);
+  const el = document.getElementById('sealStatusAcc');
+  if (el) el.textContent = `⚠️ ${mk} 尚未封存`;
+  renderHome();
+}
+
 function sealMonthAcc() {
   const inp = document.getElementById('sealMonthInpAcc');
   const mk = inp ? inp.value : curMK();
@@ -2831,6 +2860,25 @@ function renderHomePie() {
   });
 }
 
+// ══ ONBOARDING ══
+function checkOnboarding() {
+  if (D.accounts.length === 0) {
+    document.getElementById('onboardScreen').style.display = 'flex';
+  }
+}
+function goToCreateAccount() {
+  document.getElementById('onboardScreen').style.display = 'none';
+  showPg('accounts', document.querySelectorAll('.bb')[1]);
+  // scroll to new account form
+  setTimeout(()=>{
+    const el = document.getElementById('newAccName');
+    if (el) el.focus();
+  }, 300);
+}
+function closeOnboarding() {
+  document.getElementById('onboardScreen').style.display = 'none';
+}
+
 // ══ SEARCH ══
 function getSearchQuery() {
   const el = document.getElementById('searchInp');
@@ -2882,6 +2930,7 @@ setTimeout(()=>{
   if (!window._currentUser) {
     autoAddFixed();
     renderHome();
+    checkOnboarding();
   }
 }, 3000);
 </script>
