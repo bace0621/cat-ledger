@@ -1674,6 +1674,7 @@ function renderAccounts() {
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
         <div class="acc-row-bal" style="color:${isNeg?'#D94040':'var(--a2)'}">${isNeg?'-':'+'}${fmt(bal)}</div>
         <div style="display:flex;gap:4px">
+          <button class="btn-sm ghost" onclick="openEditAccount('${a.id}')" style="font-size:11px;padding:4px 8px">✏️</button>
           <button class="btn-sm ghost" onclick="archiveAccount('${a.id}')" style="font-size:11px;padding:4px 8px">${a.archived?'取消封存':'封存'}</button>
         </div>
       </div>
@@ -2350,7 +2351,7 @@ function renderCreditBilling() {
   const tabs = creditAccs.map(a=>`
     <button class="credit-acc-tab ${a.id===activeCreditAccId?'active':''}"
       onclick="activeCreditAccId='${a.id}';renderCreditBilling()">
-      ${a.emoji} ${a.name}
+      ${a.emoji||'💳'} ${a.name||'信用卡'}
     </button>`).join('');
 
   // get exp txs for this credit account
