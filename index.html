@@ -1199,7 +1199,32 @@ function getAccIconLarge(a) {
   return `<span style="font-size:24px">${a.emoji||'🏦'}</span>`;
 }
 
-const EMOJIS = ['🍱','🍔','🍜','🍣','🥗','🧋','☕','🛒','🚗','🚌','✈️','🏍️','🛍️','👗','👟','💄','💅','🎉','🎮','🎬','🎵','🏋️','⚽','🏊','🏥','💊','🧴','🪥','🧹','🏠','🔑','💡','📚','✏️','💻','📱','🖨️','🐱','🐶','🐠','🐇','🌱','🌸','☀️','🌙','❄️','🎂','🎁','🧧','💐','💰','💳','🏦','📈','📊','🔒','💵','🪙','💎','🛺','⚡','🔧','📦','🎯','✨','🌈','🎪','🏖️','🏔️','🗺️','🎠','🧩','🎭','🎨'];
+const EMOJIS = [
+  // 餐食飲料
+  '🍱','🥐','🍳','🥗','🍜','🍣','🍔','🌮','🧋','☕','🍺','🥤',
+  // 交通
+  '🚗','🚌','🚇','🚆','✈️','🛵','🚲','🚕','⛽','🅿️',
+  // 購物日用
+  '🛒','👗','👟','👜','💄','🪒','🧴','🧻','🪥','🧺',
+  // 住家
+  '🏠','🔑','💡','🔧','🪣','📦','🛋️','🧹','🪴',
+  // 醫療健康
+  '🏥','💊','🩺','😷','💉','🦷','👁️','🧘',
+  // 娛樂休閒
+  '🎬','🎮','🎵','📚','🏋️','⚽','🎾','🏊','🎯',
+  // 寵物
+  '🐱','🐶','🐠','🐇','🦮','🐾',
+  // 人情禮物
+  '🎁','🧧','💐','🎂','🍾',
+  // 金融帳戶
+  '💳','🏦','💵','📈','🔒','💰','🪙',
+  // 工作
+  '💻','📱','🖨️','✏️','📋','📁','💼',
+  // 小孩教育
+  '🎒','📐','🖍️','🏫',
+  // 其他常用
+  '🔖','⚡','📦','🩹','🧾'
+];
 
 let selCat = null;
 let txType = 'exp';
@@ -1559,9 +1584,23 @@ function renderHome() {
            acc.name.toLowerCase().includes(query) ||
            String(tx.amt).includes(query);
   }).slice(0,50);
+  // 按日期分組
+  const allCatsR = [...D.cats,...INC_CATS];
+  const grouped = {};
+  recent.forEach(tx=>{
+    const dk = fmtDk(tx.dk)||'未知日期';
+    if (!grouped[dk]) grouped[dk]={txs:[],exp:0,inc:0};
+    grouped[dk].txs.push(tx);
+    if (tx.type==='exp'||tx.type==='clm') grouped[dk].exp+=tx.amt;
+    if (tx.type==='inc') grouped[dk].inc+=tx.amt;
+  });
   document.getElementById('recentTx').innerHTML = recent.length===0
     ? '<div class="empty"><div class="ei">☀️</div><p>還沒有記錄</p></div>'
-    : recent.map(tx=>{
+    : Object.keys(grouped).sort((a,b)=>b.localeCompare(a)).map(dk=>{
+    const g=grouped[dk];
+    const net=g.inc-g.exp;
+    const netStr=net>=0?`<span style="color:#2A9A58">+${fmt(net)}</span>`:`<span style="color:#E84040">-${fmt(-net)}</span>`;
+    const txsHtml=g.txs.map(tx=>{
         if (tx.type==='trf') {
           const fa = D.accounts.find(a=>a.id===tx.from);
           const ta = D.accounts.find(a=>a.id===tx.to);
@@ -1603,7 +1642,9 @@ function renderHome() {
           <button class="tx-del" onclick="openEditTx('${tx.id}')" style="opacity:0.4;font-size:13px" title="編輯">✏️</button>
           <button class="tx-del" onclick="deleteTx('${tx.id}')">✕</button>
         </div>`;
-      }).join('');
+    }).join('');
+    return `<div class="tx-date-group"><span>${dk}</span>${netStr}</div>${txsHtml}`;
+  }).join('');
 }
 
 // ══ RENDER ACCOUNTS ══
