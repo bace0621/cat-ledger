@@ -247,6 +247,26 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
 .calc-btn.eq:hover{opacity:.9;}
 .calc-btn.del{color:#D94040;}
 
+/* ── Calendar ── */
+.cal-wrap{margin-bottom:8px;}
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.cal-title{font-family:'DM Serif Display',serif;font-size:16px;color:var(--tx);}
+.cal-nav{background:none;border:1.5px solid var(--bdrm);border-radius:var(--rxs);padding:6px 12px;font-family:inherit;font-size:14px;cursor:pointer;color:var(--txm);}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.cal-day-label{font-size:10px;font-weight:700;color:var(--txl);text-align:center;padding:4px 0;}
+.cal-day{border-radius:8px;padding:4px 2px;min-height:44px;cursor:pointer;transition:background .15s;position:relative;}
+.cal-day:hover{background:var(--pale);}
+.cal-day.today{background:var(--pale);border:1.5px solid var(--a1);}
+.cal-day.sel{background:var(--a1);}
+.cal-day.sel .cal-dn{color:white;}
+.cal-day.other-month{opacity:0.3;}
+.cal-dn{font-size:12px;font-weight:600;text-align:center;color:var(--tx);}
+.cal-dot{width:5px;height:5px;border-radius:50%;margin:2px auto 0;}
+.cal-dot.exp{background:var(--a2);}
+.cal-dot.inc{background:#2A9A58;}
+.cal-amt{font-size:9px;text-align:center;color:var(--txl);margin-top:1px;overflow:hidden;}
+.cal-detail{background:var(--surf);border-radius:var(--rsm);padding:12px;margin-top:8px;border:1px solid var(--bdr);}
+
 /* ── Search ── */
 .search-wrap{display:flex;gap:8px;margin-bottom:12px;}
 .search-inp{flex:1;padding:10px 14px;border:1.5px solid var(--bdrm);border-radius:var(--rsm);font-family:inherit;font-size:14px;color:var(--tx);background:var(--bg);outline:none;}
@@ -520,11 +540,32 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
 
   <!-- 近期記錄 -->
   <div class="card">
-    <div class="card-ttl">近期記錄</div>
-    <div class="search-wrap">
-      <input type="text" class="search-inp" id="searchInp" placeholder="🔍 搜尋記錄..." oninput="renderHome()">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="card-ttl" style="margin-bottom:0">近期記錄</div>
+      <div style="display:flex;gap:6px">
+        <button class="cal-nav" onclick="setViewMode('list')" id="btn-list" style="font-size:11px;padding:5px 10px">📋 列表</button>
+        <button class="cal-nav" onclick="setViewMode('cal')" id="btn-cal" style="font-size:11px;padding:5px 10px">📅 日曆</button>
+      </div>
     </div>
-    <div id="recentTx"></div>
+    <!-- 列表視圖 -->
+    <div id="view-list">
+      <div class="search-wrap">
+        <input type="text" class="search-inp" id="searchInp" placeholder="🔍 搜尋記錄..." oninput="renderHome()">
+      </div>
+      <div id="recentTx"></div>
+    </div>
+    <!-- 日曆視圖 -->
+    <div id="view-cal" style="display:none">
+      <div class="cal-wrap">
+        <div class="cal-header">
+          <button class="cal-nav" onclick="calPrevMonth()">‹</button>
+          <div class="cal-title" id="calTitle"></div>
+          <button class="cal-nav" onclick="calNextMonth()">›</button>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+        <div class="cal-detail" id="calDetail" style="display:none"></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1550,7 +1591,7 @@ function renderHome() {
   // Recent txs (last 20)
   const query = getSearchQuery();
   const allCatsSearch = [...D.cats, ...INC_CATS];
-  const recent = [...D.txs].sort((a,b)=>b.ts-a.ts).filter(tx => {
+  const recent = [...D.txs].sort((a,b)=>(b.dk||'').localeCompare(a.dk||'')||b.ts-a.ts).filter(tx => {
     if (!query) return true;
     const cat = allCatsSearch.find(c=>c.id===tx.cat)||{name:''};
     const acc = D.accounts.find(a=>a.id===tx.acc)||{name:''};
@@ -1559,52 +1600,64 @@ function renderHome() {
            acc.name.toLowerCase().includes(query) ||
            String(tx.amt).includes(query);
   }).slice(0,50);
+  // 按日期分組顯示
+  const allCatsR = [...D.cats, ...INC_CATS];
+  const grouped = {};
+  recent.forEach(tx=>{
+    const dk = fmtDk(tx.dk)||'未知日期';
+    if (!grouped[dk]) grouped[dk]={txs:[],exp:0,inc:0};
+    grouped[dk].txs.push(tx);
+    if (tx.type==='exp'||tx.type==='clm') grouped[dk].exp+=tx.amt;
+    if (tx.type==='inc') grouped[dk].inc+=tx.amt;
+  });
+
   document.getElementById('recentTx').innerHTML = recent.length===0
     ? '<div class="empty"><div class="ei">☀️</div><p>還沒有記錄</p></div>'
-    : recent.map(tx=>{
-        if (tx.type==='trf') {
-          const fa = D.accounts.find(a=>a.id===tx.from);
-          const ta = D.accounts.find(a=>a.id===tx.to);
+    : Object.keys(grouped).sort((a,b)=>b.localeCompare(a)).map(dk=>{
+        const g = grouped[dk];
+        const net = g.inc - g.exp;
+        const netStr = net>=0 ? `<span style="color:#2A9A58">+${fmt(net)}</span>` : `<span style="color:#E84040">${fmt(-net)}</span>`;
+        const txsHtml = g.txs.map(tx=>{
+          if (tx.type==='trf') {
+            const fa=D.accounts.find(a=>a.id===tx.from);
+            const ta=D.accounts.find(a=>a.id===tx.to);
+            return `<div class="tx-item">
+              <div class="tx-ico trf">↔</div>
+              <div class="tx-info"><div class="tx-name">${tx.note||'轉帳'}</div>
+              <div class="tx-meta">${fa?.name||tx.fromName||'?'} → ${ta?.name||tx.toName||'?'}</div></div>
+              <div class="tx-amt trf">${fmt(tx.amt)}</div>
+              <button class="tx-del" onclick="openEditTx('${tx.id}')" style="opacity:0.4;font-size:13px">✏️</button>
+              <button class="tx-del" onclick="deleteTx('${tx.id}')">✕</button>
+            </div>`;
+          }
+          if (tx.type==='clm'||tx.type==='settle') {
+            const acc2=D.accounts.find(a=>a.id===tx.acc);
+            const isSettle=tx.type==='settle';
+            return `<div class="tx-item">
+              <div class="tx-ico clm">${isSettle?'✅':'🧾'}</div>
+              <div class="tx-info"><div class="tx-name">${tx.note}</div>
+              <div class="tx-meta">${acc2?.name||tx.accName||'?'} <span class="tag" style="background:#FFF8E0;color:#A07000">${isSettle?'回款':'墊款'}</span></div></div>
+              <div class="tx-amt clm">${isSettle?'+':'−'}${fmt(tx.amt)}</div>
+              <button class="tx-del" onclick="openEditTx('${tx.id}')" style="opacity:0.4;font-size:13px">✏️</button>
+              <button class="tx-del" onclick="deleteTx('${tx.id}')">✕</button>
+            </div>`;
+          }
+          const cat=allCatsR.find(c=>c.id===tx.cat)||{emoji:'📦',name:tx.cat};
+          const acc=D.accounts.find(a=>a.id===tx.acc);
           return `<div class="tx-item">
-            <div class="tx-ico trf">↔</div>
-            <div class="tx-info">
-              <div class="tx-name">${tx.note||'轉帳'}</div>
-              <div class="tx-meta">${fmtDk(tx.dk)} · ${fa?.name||tx.fromName||'未知'} → ${ta?.name||tx.toName||'未知'}</div>
-            </div>
-            <div class="tx-amt trf">${fmt(tx.amt)}</div>
-            <button class="tx-del" onclick="openEditTx('${tx.id}')" style="opacity:0.4;font-size:13px" title="編輯">✏️</button>
-          <button class="tx-del" onclick="deleteTx('${tx.id}')">✕</button>
+            <div class="tx-ico ${tx.type}">${cat.emoji}</div>
+            <div class="tx-info"><div class="tx-name">${tx.note||cat.name}</div>
+            <div class="tx-meta">${acc?.name||tx.accName||'未知帳戶'} <span class="tag ${tx.type}">${tx.type==='inc'?'收入':'支出'}</span>${tx.historical?` <span style="font-size:10px;background:#EEF0F8;color:#6070B0;padding:2px 5px;border-radius:99px;font-weight:700">補登</span>`:''}</div></div>
+            <div class="tx-amt ${tx.type}">${tx.type==='inc'?'+':'−'}${fmt(tx.amt)}</div>
+            <button class="tx-del" onclick="openEditTx('${tx.id}')" style="opacity:0.4;font-size:13px">✏️</button>
+            <button class="tx-del" onclick="deleteTx('${tx.id}')">✕</button>
           </div>`;
-        }
-        if (tx.type==='clm'||tx.type==='settle') {
-          const acc2 = D.accounts.find(a=>a.id===tx.acc);
-          const isSettle = tx.type==='settle';
-          return `<div class="tx-item">
-            <div class="tx-ico clm">${isSettle?'✅':'🧾'}</div>
-            <div class="tx-info">
-              <div class="tx-name">${tx.note}</div>
-              <div class="tx-meta">${fmtDk(tx.dk)} · ${acc2?.name||'未知帳戶'} <span class="tag" style="background:#FFF8E0;color:#A07000">${isSettle?'回款沖銷':'報帳墊款'}</span></div>
-            </div>
-            <div class="tx-amt clm">${isSettle?'+':'−'}${fmt(tx.amt)}</div>
-            <button class="tx-del" onclick="openEditTx('${tx.id}')" style="opacity:0.4;font-size:13px" title="編輯">✏️</button>
-          <button class="tx-del" onclick="deleteTx('${tx.id}')">✕</button>
-          </div>`;
-        }
-        const allCats = [...D.cats, ...INC_CATS];
-        const cat = allCats.find(c=>c.id===tx.cat)||{emoji:'📦',name:tx.cat};
-        const acc = D.accounts.find(a=>a.id===tx.acc);
-        return `<div class="tx-item">
-          <div class="tx-ico ${tx.type}">${cat.emoji}</div>
-          <div class="tx-info">
-            <div class="tx-name">${tx.note||cat.name}</div>
-            <div class="tx-meta">${fmtDk(tx.dk)} · ${acc?.name||tx.accName||'未知帳戶'} <span class="tag ${tx.type}">${tx.type==='inc'?'收入':'支出'}</span>${tx.historical?` <span style="font-size:10px;background:#EEF0F8;color:#6070B0;padding:2px 5px;border-radius:99px;font-weight:700">補登</span>`:''}</div>
-          </div>
-          <div class="tx-amt ${tx.type}">${tx.type==='inc'?'+':'−'}${fmt(tx.amt)}</div>
-          <button class="tx-del" onclick="openEditTx('${tx.id}')" style="opacity:0.4;font-size:13px" title="編輯">✏️</button>
-          <button class="tx-del" onclick="deleteTx('${tx.id}')">✕</button>
-        </div>`;
+        }).join('');
+        return `<div class="tx-date-group"><span>${dk}</span>${netStr}</div>${txsHtml}`;
       }).join('');
-}
+
+  renderHomePie();
+
 
 // ══ RENDER ACCOUNTS ══
 function renderAccounts() {
@@ -2878,6 +2931,120 @@ function goToCreateAccount() {
 }
 function closeOnboarding() {
   document.getElementById('onboardScreen').style.display = 'none';
+}
+
+// ══ CALENDAR VIEW ══
+let calViewMonth = new Date();
+let calSelDate = null;
+let currentViewMode = 'list';
+
+function setViewMode(mode) {
+  currentViewMode = mode;
+  document.getElementById('view-list').style.display = mode==='list' ? 'block' : 'none';
+  document.getElementById('view-cal').style.display = mode==='cal' ? 'block' : 'none';
+  document.getElementById('btn-list').style.background = mode==='list' ? 'var(--pale)' : '';
+  document.getElementById('btn-list').style.borderColor = mode==='list' ? 'var(--a1)' : '';
+  document.getElementById('btn-cal').style.background = mode==='cal' ? 'var(--pale)' : '';
+  document.getElementById('btn-cal').style.borderColor = mode==='cal' ? 'var(--a1)' : '';
+  if (mode==='cal') renderCal();
+}
+
+function calPrevMonth() {
+  calViewMonth = new Date(calViewMonth.getFullYear(), calViewMonth.getMonth()-1, 1);
+  calSelDate = null;
+  renderCal();
+}
+function calNextMonth() {
+  calViewMonth = new Date(calViewMonth.getFullYear(), calViewMonth.getMonth()+1, 1);
+  calSelDate = null;
+  renderCal();
+}
+
+function renderCal() {
+  const y = calViewMonth.getFullYear();
+  const m = calViewMonth.getMonth();
+  const mk = `${y}-${String(m+1).padStart(2,'0')}`;
+  document.getElementById('calTitle').textContent = `${y}年${m+1}月`;
+
+  // build day map
+  const dayMap = {};
+  D.txs.forEach(tx=>{
+    const dk = (tx.dk||'').slice(0,10);
+    if (!dk.startsWith(mk)) return;
+    if (!dayMap[dk]) dayMap[dk] = {exp:0, inc:0, txs:[]};
+    if (tx.type==='exp') dayMap[dk].exp += tx.amt;
+    if (tx.type==='inc') dayMap[dk].inc += tx.amt;
+    dayMap[dk].txs.push(tx);
+  });
+
+  const today = getTK();
+  const firstDay = new Date(y, m, 1).getDay();
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const daysInPrev = new Date(y, m, 0).getDate();
+
+  const labels = ['日','一','二','三','四','五','六'];
+  let html = labels.map(l=>`<div class="cal-day-label">${l}</div>`).join('');
+
+  // prev month days
+  for (let i=firstDay-1; i>=0; i--) {
+    html += `<div class="cal-day other-month"><div class="cal-circle"><div class="cal-dn">${daysInPrev-i}</div></div></div>`;
+  }
+
+  // current month days
+  for (let d=1; d<=daysInMonth; d++) {
+    const dk = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday = dk===today;
+    const isSel = dk===calSelDate;
+    const info = dayMap[dk];
+    const hasCls = info ? (info.exp>0&&info.inc>0?'has-both':info.exp>0?'has-exp':'has-inc') : '';
+    html += `<div class="cal-day ${hasCls} ${isToday?'today':''} ${isSel?'sel':''}" onclick="calSelectDay('${dk}')">
+      <div class="cal-circle"><div class="cal-dn">${d}</div></div>
+      ${info&&info.exp>0?`<div class="cal-amt-exp">-${Math.round(info.exp/100)<10?info.exp:Math.round(info.exp/100)+'百'}</div>`:''}
+      ${info&&info.inc>0?`<div class="cal-amt-inc">+${Math.round(info.inc/100)<10?info.inc:Math.round(info.inc/100)+'百'}</div>`:''}
+    </div>`;
+  }
+
+  // next month days
+  const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+  for (let d=1; d<=totalCells-(firstDay+daysInMonth); d++) {
+    html += `<div class="cal-day other-month"><div class="cal-circle"><div class="cal-dn">${d}</div></div></div>`;
+  }
+
+  document.getElementById('calGrid').innerHTML = html;
+
+  // show selected day detail
+  if (calSelDate) {
+    const info = dayMap[calSelDate];
+    const detail = document.getElementById('calDetail');
+    detail.style.display = 'block';
+    if (!info || !info.txs.length) {
+      detail.innerHTML = `<div style="font-size:13px;color:var(--txl);text-align:center;padding:8px">${calSelDate} 沒有記錄</div>`;
+      return;
+    }
+    const allCats = [...D.cats,...INC_CATS];
+    detail.innerHTML = `<div style="font-size:11px;font-weight:700;color:var(--txl);margin-bottom:8px">${calSelDate}</div>` +
+      info.txs.sort((a,b)=>b.ts-a.ts).map(tx=>{
+        const cat = allCats.find(c=>c.id===tx.cat)||{emoji:'📦',name:''};
+        const acc = D.accounts.find(a=>a.id===tx.acc);
+        return `<div class="tx-item" style="padding:8px 0">
+          <div class="tx-ico ${tx.type}">${cat.emoji}</div>
+          <div class="tx-info">
+            <div class="tx-name">${tx.note||cat.name}</div>
+            <div class="tx-meta">${acc?.name||tx.accName||'未知帳戶'}</div>
+          </div>
+          <div class="tx-amt ${tx.type}">${tx.type==='inc'?'+':'−'}${fmt(tx.amt)}</div>
+          <button class="tx-del" onclick="openEditTx('${tx.id}')" style="opacity:0.4;font-size:13px">✏️</button>
+          <button class="tx-del" onclick="deleteTx('${tx.id}');renderCal()">✕</button>
+        </div>`;
+      }).join('');
+  } else {
+    document.getElementById('calDetail').style.display = 'none';
+  }
+}
+
+function calSelectDay(dk) {
+  calSelDate = calSelDate===dk ? null : dk;
+  renderCal();
 }
 
 // ══ SEARCH ══
