@@ -250,14 +250,14 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
 /* ── Calendar circles ── */
 .cal-day{display:flex;flex-direction:column;align-items:center;padding:2px 1px;cursor:pointer;}
 .cal-day.other-month{opacity:0.25;}
-.cal-circle{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #E0E0E0;transition:all .15s;}
-.cal-day.has-exp .cal-circle{border-color:#E84040;}
-.cal-day.has-inc .cal-circle{border-color:#2A9A58;}
+.cal-circle{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid #D8D8D8;transition:all .15s;}
+.cal-day.has-exp .cal-circle{border-color:#E84040;border-width:3px;}
+.cal-day.has-inc .cal-circle{border-color:#2A9A58;border-width:3px;}
 .cal-day.today .cal-circle{background:var(--a1);border-color:var(--a1);}
 .cal-day.today .cal-dn{color:white;}
 .cal-day.sel .cal-circle{background:var(--a2);border-color:var(--a2);}
 .cal-day.sel .cal-dn{color:white;}
-.cal-dn{font-size:11px;font-weight:700;color:var(--tx);}
+.cal-dn{font-size:12px;font-weight:700;color:var(--tx);}
 .cal-lbl{font-size:10px;font-weight:700;color:var(--txl);text-align:center;padding:3px 0;}
 .cal-sub{font-size:8px;text-align:center;line-height:1.2;margin-top:1px;}
 .tx-date-group{font-size:12px;font-weight:700;color:var(--txm);padding:8px 0 4px;display:flex;justify-content:space-between;border-top:1px solid var(--bdr);margin-top:2px;}
