@@ -1361,7 +1361,7 @@ function setTxType(t) {
     if (rs) rs.style.display='none';
     // set date to today
     const di = document.getElementById('histDateInp');
-    if (di && !di.value) di.value = getTK();
+    if (di) di.value = getTK();
     const sw = document.getElementById('sealedWarning');
     if (sw) sw.style.display='none';
   } else if (t==='trf') {
@@ -1480,6 +1480,8 @@ function addTx() {
   save();
   document.getElementById('amtInp').value='';
   document.getElementById('noteInp').value='';
+  document.getElementById('histDateInp').value = getTK();
+  document.getElementById('sealedWarning').style.display='none';
   selCat=null;
   toast(isSealed?'已記錄（封存月份，不影響餘額）📅':txType==='inc'?'收入已記錄 💰':'記帳成功！☀️');
   renderCatGrid(); renderHome();
