@@ -3175,9 +3175,9 @@ function openAccDetail(accId) {
           <div style="font-size:13px;width:28px;text-align:center">${cat.emoji}</div>
           <div style="flex:1">
             <div style="font-size:13px;font-weight:600">${tx.note||label}${historical}</div>
-            <div style="font-size:11px;color:var(--txl)">${tx.dk||''} · <span style="font-size:10px;background:var(--pale);padding:1px 6px;border-radius:99px">${label}</span></div>
+            <div style="font-size:11px;color:var(--txl)">${fmtDk(tx.dk)||''} · <span style="font-size:10px;background:var(--pale);padding:1px 6px;border-radius:99px">${label}</span></div>
           </div>
-          <div style="font-size:14px;font-weight:700;color:${color}">${amt>=0?'+':''}${fmt(Math.abs(amt))}</div>
+          <div style="font-size:14px;font-weight:700;color:${color}">${amt>=0?'+':'-'}${fmt(Math.abs(amt))}</div>
         </div>`;
       }).join('');
 
