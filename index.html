@@ -869,6 +869,30 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
   </div>
 </div>
 
+<!-- Account detail modal -->
+<div class="modal-overlay" id="accDetailModal">
+  <div class="modal-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div class="modal-title" style="margin-bottom:0" id="accDetailTitle">帳戶明細</div>
+      <button onclick="closeAccDetail()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--txl)">✕</button>
+    </div>
+    <!-- 起始餘額 -->
+    <div style="background:var(--pale);border-radius:var(--rsm);padding:12px;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:13px">
+        <span style="color:var(--txm);font-weight:600">起始餘額</span>
+        <span style="font-weight:700" id="accDetailInitBal">$0</span>
+      </div>
+    </div>
+    <!-- 明細列表 -->
+    <div id="accDetailList"></div>
+    <!-- 總計 -->
+    <div style="background:var(--pale);border-radius:var(--rsm);padding:12px;margin-top:12px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:13px;font-weight:700;color:var(--txm)">現在餘額</span>
+      <span style="font-family:'DM Serif Display',serif;font-size:20px;font-weight:700" id="accDetailTotal">$0</span>
+    </div>
+  </div>
+</div>
+
 <!-- Edit account modal -->
 <div class="modal-overlay" id="editAccModal">
   <div class="modal-box">
@@ -1777,6 +1801,7 @@ function renderAccounts() {
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
         <div class="acc-row-bal" style="color:${isNeg?'#D94040':'var(--a2)'}">${isNeg?'-':'+'}${fmt(bal)}</div>
         <div style="display:flex;gap:4px">
+          <button class="btn-sm ghost" onclick="openAccDetail('${a.id}')" style="font-size:11px;padding:4px 8px">📋</button>
           <button class="btn-sm ghost" onclick="openEditAccount('${a.id}')" style="font-size:11px;padding:4px 8px">✏️</button>
           <button class="btn-sm ghost" onclick="archiveAccount('${a.id}')" style="font-size:11px;padding:4px 8px">${a.archived?'取消封存':'封存'}</button>
         </div>
@@ -3113,6 +3138,59 @@ function deleteCustomBank(id) {
   save();
   renderCustomBankList();
   toast('已刪除');
+}
+
+// ══ ACCOUNT DETAIL ══
+function openAccDetail(accId) {
+  const acc = D.accounts.find(a=>a.id===accId);
+  if (!acc) return;
+  const allCats = [...D.cats,...INC_CATS];
+
+  document.getElementById('accDetailTitle').textContent = (acc.emoji||'🏦') + ' ' + acc.name;
+  document.getElementById('accDetailInitBal').textContent = (acc.initBal>=0?'+':'')+fmt(acc.initBal||0);
+
+  // 所有影響這個帳戶的記錄
+  const txs = D.txs.filter(tx=>{
+    if (tx.type==='exp' && tx.acc===accId) return true;
+    if (tx.type==='inc' && tx.acc===accId) return true;
+    if (tx.type==='trf' && (tx.from===accId||tx.to===accId)) return true;
+    if (tx.type==='clm' && tx.acc===accId) return true;
+    if (tx.type==='settle' && tx.acc===accId) return true;
+    return false;
+  }).sort((a,b)=>a.dk?.localeCompare(b.dk||'')||a.ts-b.ts);
+
+  const listHtml = txs.length===0
+    ? '<div class="empty"><p>尚無交易記錄</p></div>'
+    : txs.map(tx=>{
+        let amt=0, label='', color='var(--tx)';
+        if (tx.type==='exp') { amt=-tx.amt; label='支出'; color='var(--a2)'; }
+        else if (tx.type==='inc') { amt=tx.amt; label='收入'; color='#2A9A58'; }
+        else if (tx.type==='trf' && tx.from===accId) { amt=-tx.amt; label='轉出'; color='#6070B0'; }
+        else if (tx.type==='trf' && tx.to===accId) { amt=tx.amt; label='轉入'; color='#6070B0'; }
+        else if (tx.type==='clm') { amt=-tx.amt; label='墊款'; color='#B07800'; }
+        else if (tx.type==='settle') { amt=tx.amt; label='回款'; color='#2A9A58'; }
+        const cat = allCats.find(c=>c.id===tx.cat)||{emoji:'📦'};
+        const historical = tx.historical ? '<span style="font-size:10px;background:#EEF0F8;color:#6070B0;padding:1px 5px;border-radius:99px;margin-left:4px">補登</span>' : '';
+        return `<div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--bdr)">
+          <div style="font-size:13px;width:28px;text-align:center">${cat.emoji}</div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600">${tx.note||label}${historical}</div>
+            <div style="font-size:11px;color:var(--txl)">${tx.dk||''} · <span style="font-size:10px;background:var(--pale);padding:1px 6px;border-radius:99px">${label}</span></div>
+          </div>
+          <div style="font-size:14px;font-weight:700;color:${color}">${amt>=0?'+':''}${fmt(Math.abs(amt))}</div>
+        </div>`;
+      }).join('');
+
+  document.getElementById('accDetailList').innerHTML = listHtml;
+  const bal = getAccBal(accId);
+  const balEl = document.getElementById('accDetailTotal');
+  balEl.textContent = (bal>=0?'+':'-') + fmt(bal);
+  balEl.style.color = bal>=0?'var(--a2)':'#D94040';
+  document.getElementById('accDetailModal').classList.add('show');
+}
+
+function closeAccDetail() {
+  document.getElementById('accDetailModal').classList.remove('show');
 }
 
 // ══ SEARCH ══
