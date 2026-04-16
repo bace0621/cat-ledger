@@ -592,6 +592,10 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
       </select>
     </div>
     <div class="fg">
+      <label class="flbl">幣別</label>
+      <select class="finp" id="newAccCurrency"></select>
+    </div>
+    <div class="fg">
       <label class="flbl">現在這個帳戶有多少錢？</label>
       <input type="number" class="finp" id="newAccBal" placeholder="請輸入目前實際餘額" inputmode="decimal">
       <div style="font-size:11px;color:var(--txl);margin-top:6px;line-height:1.5">
@@ -776,6 +780,15 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
   </div>
 
 
+
+  <!-- 匯率設定 -->
+  <div class="card">
+    <div class="card-ttl">💱 匯率設定（對台幣）</div>
+    <div style="font-size:11px;color:var(--txl);margin-bottom:8px">1 外幣 = ? 台幣，可手動調整或一鍵更新即時匯率</div>
+    <button onclick="fetchLiveRates()" style="width:100%;padding:10px;background:none;border:1.5px solid var(--a1);border-radius:var(--rsm);font-family:inherit;font-size:13px;font-weight:700;color:var(--a2);cursor:pointer;margin-bottom:12px">🔄 更新即時匯率</button>
+    <div id="rateLastUpdate" style="font-size:11px;color:var(--txl);margin-bottom:10px"></div>
+    <div id="rateList"></div>
+  </div>
 
   <!-- 自訂銀行 icon -->
   <div class="card">
@@ -1338,6 +1351,35 @@ const EMOJIS = [
   '🔖','⚡','📦','🩹','🧾'
 ];
 
+// ══ 匯率 ══
+const CURRENCIES = [
+  {code:'TWD', name:'新台幣',   symbol:'$',   flag:'🇹🇼'},
+  {code:'USD', name:'美元',     symbol:'$',   flag:'🇺🇸'},
+  {code:'JPY', name:'日圓',     symbol:'¥',   flag:'🇯🇵'},
+  {code:'HKD', name:'港幣',     symbol:'HK$', flag:'🇭🇰'},
+  {code:'CNY', name:'人民幣',   symbol:'¥',   flag:'🇨🇳'},
+  {code:'EUR', name:'歐元',     symbol:'€',   flag:'🇪🇺'},
+  {code:'KRW', name:'韓元',     symbol:'₩',   flag:'🇰🇷'},
+  {code:'GBP', name:'英鎊',     symbol:'£',   flag:'🇬🇧'},
+  {code:'AUD', name:'澳幣',     symbol:'A$',  flag:'🇦🇺'},
+  {code:'SGD', name:'新加坡幣', symbol:'S$',  flag:'🇸🇬'},
+];
+// 預設匯率（對 TWD）
+const DEFAULT_RATES = {TWD:1, USD:31.5, JPY:0.21, HKD:4.05, CNY:4.35, EUR:34.5, KRW:0.023, GBP:39.8, AUD:20.5, SGD:23.5};
+
+function getRates() {
+  return Object.assign({}, DEFAULT_RATES, D.customRates||{});
+}
+function toTWD(amt, currency) {
+  if (!currency || currency==='TWD') return amt;
+  return amt * (getRates()[currency]||1);
+}
+function fmtFx(amt, currency) {
+  if (!currency || currency==='TWD') return fmt(amt);
+  const cur = CURRENCIES.find(c=>c.code===currency);
+  return (cur?.symbol||'') + Math.abs(Math.round(amt)).toLocaleString() + ' ' + currency;
+}
+
 let selCat = null;
 let txType = 'exp';
 let selAccEmoji = '🏦';
@@ -1827,7 +1869,10 @@ function renderAccounts() {
         ${a.loanData?(()=>{ const s=getLoanThisMonth(a); return s?`<div style="font-size:11px;color:var(--txl);margin-top:2px">本月本金 <b style="color:var(--a2)">$${s.principal.toLocaleString()}</b> ／ 利息 <b style="color:#D94040">$${s.interest.toLocaleString()}</b></div>`:''; })():''}
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
-        <div class="acc-row-bal" style="color:${isNeg?'#D94040':'var(--a2)'}">${isNeg?'-':'+'}${fmt(bal)}</div>
+        <div class="acc-row-bal" style="color:${isNeg?'#D94040':'var(--a2)'}">
+          ${isNeg?'-':'+'}${fmtFx(bal, a.currency)}
+          ${a.currency&&a.currency!=='TWD'?`<div style="font-size:10px;color:var(--txl);font-weight:500">≈ ${fmt(toTWD(bal,a.currency))} TWD</div>`:''}
+        </div>
         <div style="display:flex;gap:4px">
           <button class="btn-sm ghost" onclick="openAccDetail('${a.id}')" style="font-size:11px;padding:4px 8px">📋</button>
           <button class="btn-sm ghost" onclick="openEditAccount('${a.id}')" style="font-size:11px;padding:4px 8px">✏️</button>
@@ -1869,7 +1914,8 @@ function addAccount() {
     selAccEmoji='🏦';
   } else {
     const initBal = parseFloat(document.getElementById('newAccBal').value)||0;
-    D.accounts.push({id:'acc'+Date.now(), name, type, emoji:selAccEmoji, initBal, bankIcon: selBankIcon ? BANK_ICONS.find(b=>b.id===selBankIcon)?.file : null});
+    const currency = document.getElementById('newAccCurrency')?.value || 'TWD';
+    D.accounts.push({id:'acc'+Date.now(), name, type, emoji:selAccEmoji, initBal, currency, bankIcon: selBankIcon ? BANK_ICONS.find(b=>b.id===selBankIcon)?.file : null});
     document.getElementById('newAccBal').value='';
   }
 
@@ -1969,6 +2015,8 @@ function renderSettings() {
   renderFixedExpList();
   initAdvancedSettings();
   renderIncCatManage();
+  renderRateList();
+  renderCurrencySel();
   // Cat manage
   document.getElementById('catManage').innerHTML = D.cats.map(c=>`
     <div class="bset-row" style="opacity:${c.archived?0.5:1}">
@@ -3259,6 +3307,8 @@ function addIncCategory() {
   document.getElementById('newIncCatEmojiDisplay').textContent='💰';
   toast('收入類別已新增 ✓');
   renderIncCatManage();
+  renderRateList();
+  renderCurrencySel();
   renderCatGrid();
 }
 
@@ -3268,8 +3318,72 @@ function archiveIncCat(id) {
   cat.archived = !cat.archived;
   save();
   renderIncCatManage();
+  renderRateList();
+  renderCurrencySel();
   renderCatGrid();
   toast(cat.archived?'已封存':'已取消封存');
+}
+
+// ══ RATES ══
+function renderRateList() {
+  const el = document.getElementById('rateList');
+  if (!el) return;
+  const lastUpdate = document.getElementById('rateLastUpdate');
+  if (lastUpdate) lastUpdate.textContent = D.rateUpdatedAt ? `上次更新：${D.rateUpdatedAt}` : '尚未更新即時匯率';
+  const rates = getRates();
+  el.innerHTML = CURRENCIES.filter(c=>c.code!=='TWD').map(cur=>`
+    <div class="bset-row">
+      <span style="font-size:18px">${cur.flag}</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600">${cur.name}（${cur.code}）</div>
+        <div style="font-size:11px;color:var(--txl)">1 ${cur.code} = ? TWD</div>
+      </div>
+      <input type="number" class="binp" value="${rates[cur.code]||''}" step="0.01" placeholder="匯率"
+        onchange="updateRate('${cur.code}',this.value)" style="width:80px">
+    </div>`).join('');
+}
+
+async function fetchLiveRates() {
+  const btn = event.target;
+  btn.textContent = '⏳ 更新中...';
+  btn.disabled = true;
+  try {
+    // 使用免費的 exchangerate-api
+    const res = await fetch('https://api.exchangerate-api.com/v4/latest/TWD');
+    const data = await res.json();
+    if (!data.rates) throw new Error('格式錯誤');
+    if (!D.customRates) D.customRates = {};
+    // 換算：1外幣=?TWD → 1/rates[外幣]
+    CURRENCIES.filter(c=>c.code!=='TWD').forEach(cur=>{
+      const rate = data.rates[cur.code];
+      if (rate) D.customRates[cur.code] = Math.round((1/rate)*10000)/10000;
+    });
+    D.rateUpdatedAt = new Date().toLocaleString('zh-TW');
+    save();
+    toast('匯率已更新 ✓');
+    renderRateList();
+    renderAccounts();
+  } catch(e) {
+    toast('更新失敗，請手動輸入匯率');
+    console.error(e);
+  } finally {
+    btn.textContent = '🔄 更新即時匯率';
+    btn.disabled = false;
+  }
+}
+
+function updateRate(code, val) {
+  if (!D.customRates) D.customRates = {};
+  D.customRates[code] = parseFloat(val)||DEFAULT_RATES[code];
+  save();
+  toast(`${code} 匯率已更新 ✓`);
+  renderAccounts();
+}
+
+function renderCurrencySel() {
+  const sel = document.getElementById('newAccCurrency');
+  if (!sel) return;
+  sel.innerHTML = CURRENCIES.map(c=>`<option value="${c.code}">${c.flag} ${c.name}（${c.code}）</option>`).join('');
 }
 
 // ══ SEARCH ══
