@@ -755,6 +755,28 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
 
 
 
+  <!-- 自訂銀行 icon -->
+  <div class="card">
+    <div class="card-ttl">🏦 自訂銀行 Icon</div>
+    <div style="font-size:12px;color:var(--txm);margin-bottom:12px;line-height:1.6">
+      把圖片上傳到 GitHub 的 <b>icons/</b> 資料夾，再填入檔名即可。
+    </div>
+    <div id="customBankList"></div>
+    <hr class="divider">
+    <div class="fg">
+      <label class="flbl">銀行名稱</label>
+      <input type="text" class="finp" id="newBankName" placeholder="例：合庫銀行">
+    </div>
+    <div class="fg">
+      <label class="flbl">圖片檔名（放在 icons/ 資料夾）</label>
+      <input type="text" class="finp" id="newBankFile" placeholder="例：tcfhc.jpg">
+    </div>
+    <div style="margin-bottom:14px" id="newBankPreviewWrap" style="display:none">
+      <img id="newBankPreview" style="width:44px;height:44px;border-radius:10px;object-fit:cover;border:1px solid var(--bdr)">
+    </div>
+    <button class="btn-main" onclick="addCustomBank()">新增</button>
+  </div>
+
   <!-- 進階功能 -->
   <div class="card">
     <div class="card-ttl">⚡ 進階功能</div>
@@ -1223,6 +1245,7 @@ const BANK_ICONS = [
   { id:'cathay',       name:'國泰世華',   file:'cathay.png' },
   { id:'sinopac',      name:'永豐銀行',   file:'sinopac.jpg' },
   { id:'sinopac-pro',  name:'永豐大戶',   file:'sinopac-pro.png' },
+  { id:'tcfhc',        name:'合作金庫',   file:'tcfhc.jpg' },
 ];
 const ICONS_BASE = 'https://bace0621.github.io/cat-ledger/icons/';
 
@@ -1885,6 +1908,9 @@ function toggleEmojiPicker(type) {
 // ══ RENDER SETTINGS ══
 function renderSettings() {
   applyTheme();
+  // 載入自訂銀行
+  if (D.customBanks) D.customBanks.forEach(b=>{ if(!BANK_ICONS.find(x=>x.id===b.id)) BANK_ICONS.push(b); });
+  renderCustomBankList();
   renderFixedExpList();
   initAdvancedSettings();
   // Cat manage
@@ -3040,6 +3066,53 @@ function showCalDetail(dk, info) {
         <button class="tx-del" onclick="deleteTx('${tx.id}');renderCal()">✕</button>
       </div>`;
     }).join('');
+}
+
+// ══ CUSTOM BANK ICONS ══
+function renderCustomBankList() {
+  const el = document.getElementById('customBankList');
+  if (!el) return;
+  const custom = (D.customBanks||[]);
+  if (!custom.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--txl);margin-bottom:8px">尚未新增自訂 icon</div>';
+    return;
+  }
+  el.innerHTML = custom.map(b=>`
+    <div class="acc-row">
+      <img src="${ICONS_BASE}${b.file}" style="width:36px;height:36px;border-radius:8px;object-fit:cover;border:1px solid var(--bdr)" onerror="this.style.opacity=0.3">
+      <div class="acc-row-info">
+        <div class="acc-row-name">${b.name}</div>
+        <div class="acc-row-type">${b.file}</div>
+      </div>
+      <button class="btn-sm danger" onclick="deleteCustomBank('${b.id}')" style="font-size:11px;padding:5px 9px">刪除</button>
+    </div>`).join('');
+}
+
+function addCustomBank() {
+  const name = document.getElementById('newBankName').value.trim();
+  const file = document.getElementById('newBankFile').value.trim();
+  if (!name) { toast('請輸入銀行名稱'); return; }
+  if (!file) { toast('請輸入檔名'); return; }
+  if (!D.customBanks) D.customBanks = [];
+  const id = 'bank_' + Date.now();
+  D.customBanks.push({id, name, file});
+  // 同步到 BANK_ICONS
+  BANK_ICONS.push({id, name, file});
+  save();
+  document.getElementById('newBankName').value = '';
+  document.getElementById('newBankFile').value = '';
+  toast('已新增 ' + name + ' ✓');
+  renderCustomBankList();
+}
+
+function deleteCustomBank(id) {
+  if (!confirm('確定刪除？')) return;
+  D.customBanks = (D.customBanks||[]).filter(b=>b.id!==id);
+  const idx = BANK_ICONS.findIndex(b=>b.id===id);
+  if (idx>=0) BANK_ICONS.splice(idx,1);
+  save();
+  renderCustomBankList();
+  toast('已刪除');
 }
 
 // ══ SEARCH ══
