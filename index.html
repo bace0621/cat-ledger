@@ -1405,8 +1405,15 @@ function getTK() {
 }
 function fmtDk(dk) {
   if (!dk) return '';
-  // strip time part if present (e.g. 2026-04-10T16:00:00.000Z → 2026-04-10)
-  return dk.slice(0,10);
+  // 只取 YYYY-MM-DD，去除時區和時間
+  const s = dk.slice(0,10);
+  // 如果格式正確直接回傳
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  // 嘗試解析並用本地時間
+  try {
+    const d = new Date(dk);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  } catch(e) { return s; }
 }
 function curMK() { return getMK(new Date()); }
 function calcBudget() { return D.cats.reduce((s,c)=>s+(c.budget||0),0); }
@@ -1585,9 +1592,10 @@ function addTx() {
     return;
   }
 
-  const hd = document.getElementById('histDateInp').value || getTK();
-  const dk = hd;
-  const mk2 = hd.slice(0,7).replace('T','').slice(0,7);
+  const hdRaw = document.getElementById('histDateInp').value || getTK();
+  // 強制當成本地日期，避免時區轉換造成少一天
+  const dk = hdRaw.slice(0,10);
+  const mk2 = dk.slice(0,7);
   // 判斷是否已封存月份
   const isSealed = (D.snapshots||[]).some(s=>s.mk===mk2);
   const accObj = D.accounts.find(a=>a.id===acc);
@@ -3429,7 +3437,7 @@ function confirmEditTx() {
   if (!amt||amt<=0) { toast('請輸入金額'); return; }
   tx.amt = amt;
   tx.note = note;
-  tx.dk = dk;
+  tx.dk = dk.slice(0,10);
   tx.mk = dk.slice(0,7);
   if (tx.type!=='trf') {
     const accSel = document.getElementById('editAccSel');
