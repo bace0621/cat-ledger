@@ -1399,6 +1399,25 @@ let selFxEmoji = '💳';
 let currentTheme = localStorage.getItem('fTheme') || 'A';
 
 // ══ SAVE / HELPERS ══
+function fixAllDates() {
+  if (!confirm('確定要把所有記錄日期都 +1 天？\n建議先匯出 Excel 備份。')) return;
+  let count = 0;
+  D.txs.forEach(tx => {
+    if (!tx.dk) return;
+    const dk = tx.dk.slice(0,10);
+    const parts = dk.split('-');
+    const d = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+    d.setDate(d.getDate() + 1);
+    const newDk = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    tx.dk = newDk;
+    tx.mk = newDk.slice(0,7);
+    count++;
+  });
+  save();
+  toast(`已修正 ${count} 筆記錄 ✓`);
+  renderHome();
+}
+
 function save() {
   localStorage.setItem('fd2', JSON.stringify(D));
   // debounce cloud save
