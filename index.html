@@ -1560,12 +1560,14 @@ function pickCat(id) {
 
 // ══ ACCOUNT SELECTS ══
 function renderAccSel() {
-  const accs = D.accounts.filter(a=>!a.archived&&a.type!=='loan');
+  const typeOrder = {cash:1, credit:2, bank:3, invest:4, insurance:5};
+  const accs = D.accounts.filter(a=>!a.archived&&a.type!=='loan')
+    .sort((a,b)=>(typeOrder[a.type]||9)-(typeOrder[b.type]||9));
   if (!accs.length) {
     document.getElementById('accSel').innerHTML = '<option value="">— 請先建立帳戶 —</option>';
     return;
   }
-  document.getElementById('accSel').innerHTML = accs.map(a=>`<option value="${a.id}">${a.emoji} ${a.name}</option>`).join('');
+  document.getElementById('accSel').innerHTML = accs.map(a=>`<option value="${a.id}">${a.emoji} ${a.name}${a.currency&&a.currency!=='TWD'?' ('+a.currency+')':''}</option>`).join('');
 }
 function renderTrfSels() {
   const opts = D.accounts.filter(a=>!a.archived).map(a=>`<option value="${a.id}">${a.emoji} ${a.name}</option>`).join('');
@@ -1843,6 +1845,7 @@ function renderHome() {
 
 // ══ RENDER ACCOUNTS ══
 function renderAccounts() {
+  renderCurrencySel();
   renderCreditBilling();
   initSealMonthAcc();
   // claim stats for accounts page
