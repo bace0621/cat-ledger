@@ -2791,7 +2791,7 @@ function selectBankIcon(id, file, name) {
 // ══ ADVANCED FEATURES ══
 let voiceEnabled = localStorage.getItem('voiceEnabled') === '1';
 let ocrEnabled = localStorage.getItem('ocrEnabled') === '1';
-let anthropicKey = localStorage.getItem('anthropicKey') || '';
+let anthropicKey = localStorage.getItem('geminiKey') || localStorage.getItem('anthropicKey') || '';
 
 function initAdvancedSettings() {
   // voice toggle
@@ -2845,7 +2845,7 @@ function saveApiKey() {
   const key = document.getElementById('apiKeyInp').value.trim();
   if (!key.startsWith('AIza')) { toast('API Key 格式不對，應以 AIza 開頭'); return; }
   anthropicKey = key;
-  localStorage.setItem('anthropicKey', key);
+  localStorage.setItem('geminiKey', key);
   document.getElementById('apiKeyStatus').textContent = '✅ API Key 已儲存';
   document.getElementById('apiKeyInp').value = '';
   const ob = document.getElementById('ocrBtn');
