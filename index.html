@@ -5,6 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>貓貓帳務所 🐾</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Noto+Sans+TC:wght@400;500;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#F2A93B">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="貓貓帳務所">
+<link rel="apple-touch-icon" href="icons/pwa-icon-192.png">
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', ()=>{
+      navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+    });
+  }
+</script>
 <style>
 /* ── Themes ── */
 :root {
@@ -1435,15 +1449,13 @@ function getTK() {
 }
 function fmtDk(dk) {
   if (!dk) return '';
-  // 只取 YYYY-MM-DD，去除時區和時間
-  const s = dk.slice(0,10);
-  // 如果格式正確直接回傳
-  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-  // 嘗試解析並用本地時間
+  // 如果是純日期格式 YYYY-MM-DD 直接回傳
+  if (/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(dk)) return dk;
+  // 舊資料帶 UTC 時區（如 2026-04-09T16:00:00.000Z）→ 用本地時間解析
   try {
     const d = new Date(dk);
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  } catch(e) { return s; }
+  } catch(e) { return dk.slice(0,10); }
 }
 function curMK() { return getMK(new Date()); }
 function calcBudget() { return D.cats.reduce((s,c)=>s+(c.budget||0),0); }
