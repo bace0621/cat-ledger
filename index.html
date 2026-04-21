@@ -848,11 +848,11 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
       </div>
       <div id="ocrKeySection" style="display:none">
         <div style="font-size:11px;color:var(--txl);margin-bottom:6px;line-height:1.5">
-          🔑 Anthropic API Key（儲存在本機，不會上傳）<br>
-          申請：<a href="https://console.anthropic.com" target="_blank" style="color:var(--a1)">console.anthropic.com</a>
+          🔑 Google Gemini API Key（免費，儲存在本機）<br>
+          申請：<a href="https://aistudio.google.com" target="_blank" style="color:var(--a1)">aistudio.google.com</a> → Get API Key
         </div>
         <div style="display:flex;gap:8px">
-          <input type="password" class="finp" id="apiKeyInp" placeholder="sk-ant-..." style="font-size:13px;padding:10px 12px">
+          <input type="password" class="finp" id="apiKeyInp" placeholder="AIza..." style="font-size:13px;padding:10px 12px">
           <button class="btn-sm" onclick="saveApiKey()">儲存</button>
         </div>
         <div id="apiKeyStatus" style="font-size:11px;margin-top:6px;color:var(--txl)"></div>
@@ -2843,7 +2843,7 @@ function toggleOCR() {
 
 function saveApiKey() {
   const key = document.getElementById('apiKeyInp').value.trim();
-  if (!key.startsWith('sk-ant-')) { toast('API Key 格式不對，應以 sk-ant- 開頭'); return; }
+  if (!key.startsWith('AIza')) { toast('API Key 格式不對，應以 AIza 開頭'); return; }
   anthropicKey = key;
   localStorage.setItem('anthropicKey', key);
   document.getElementById('apiKeyStatus').textContent = '✅ API Key 已儲存';
@@ -2952,31 +2952,24 @@ async function processOCRImage(input) {
     const base64 = await fileToBase64(file);
     const mediaType = file.type || 'image/jpeg';
 
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${anthropicKey}`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': anthropicKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 300,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
-            { type: 'text', text: '這是一張收據或帳單截圖。請只回覆 JSON，格式：{"amt":金額數字,"note":"商家或品項名稱","date":"YYYY-MM-DD或空字串"}。只取總金額，不要包含任何其他文字。' }
+        contents: [{
+          parts: [
+            { inline_data: { mime_type: mediaType, data: base64 } },
+            { text: '這是一張收據或帳單截圖。請只回覆 JSON，格式：{"amt":金額數字,"note":"商家或品項名稱","date":"YYYY-MM-DD或空字串"}。只取總金額，不要包含任何其他文字或markdown。' }
           ]
-        }]
+        }],
+        generationConfig: { maxOutputTokens: 200 }
       })
     });
 
     const data = await res.json();
     if (data.error) throw new Error(data.error.message);
 
-    const text = data.content[0].text.trim();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
     const json = JSON.parse(text.replace(/```json|```/g,'').trim());
 
     if (json.amt) {
