@@ -2982,8 +2982,11 @@ async function processOCRImage(input) {
     const data = await res.json();
     if (data.error) throw new Error(data.error.message);
 
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
-    const json = JSON.parse(text.replace(/```json|```/g,'').trim());
+    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+    // 取出 JSON 部分（可能被 markdown 包住）
+    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('無法解析回應：' + rawText.slice(0,50));
+    const json = JSON.parse(jsonMatch[0]);
 
     if (json.amt) {
       document.getElementById('amtInp').value = json.amt;
