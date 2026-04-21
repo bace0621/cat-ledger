@@ -870,6 +870,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
           <button class="btn-sm" onclick="saveApiKey()">儲存</button>
         </div>
         <div id="apiKeyStatus" style="font-size:11px;margin-top:6px;color:var(--txl)"></div>
+        <button onclick="testGeminiKey()" style="margin-top:8px;padding:8px 16px;background:none;border:1.5px solid var(--a1);border-radius:var(--rxs);font-family:inherit;font-size:12px;font-weight:700;color:var(--a2);cursor:pointer">🧪 測試 API Key</button>
       </div>
     </div>
   </div>
@@ -3430,6 +3431,29 @@ function renderCurrencySel() {
   const sel = document.getElementById('newAccCurrency');
   if (!sel) return;
   sel.innerHTML = CURRENCIES.map(c=>`<option value="${c.code}">${c.flag} ${c.name}（${c.code}）</option>`).join('');
+}
+
+// ══ TEST GEMINI ══
+async function testGeminiKey() {
+  if (!anthropicKey) { toast('請先填入並儲存 API Key'); return; }
+  toast('測試中...');
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${anthropicKey}`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({contents:[{parts:[{text:'回覆OK兩個字就好'}]}]})
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text||'';
+    toast('✅ API Key 有效！回應：' + reply.slice(0,20));
+    document.getElementById('apiKeyStatus').textContent = '✅ 測試成功，API Key 正常';
+    document.getElementById('apiKeyStatus').style.color = '#2A9A58';
+  } catch(e) {
+    toast('❌ 失敗：' + e.message.slice(0,30));
+    document.getElementById('apiKeyStatus').textContent = '❌ ' + e.message.slice(0,50);
+    document.getElementById('apiKeyStatus').style.color = '#D94040';
+  }
 }
 
 // ══ SEARCH ══
