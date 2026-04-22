@@ -876,16 +876,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
   </div>
 
 
-  <!-- 資料修正 -->
-  <div class="card" style="border:1.5px solid #6070C8">
-    <div class="card-ttl" style="color:#6070C8">🔧 資料修正工具</div>
-    <div style="font-size:12px;color:var(--txm);margin-bottom:12px;line-height:1.6">
-      如果所有記錄日期都少一天（時區問題），點此一次全部修正。
-    </div>
-    <button onclick="fixAllDates()" style="width:100%;padding:13px;background:none;border:1.5px solid #6070C8;border-radius:var(--rsm);font-family:inherit;font-size:14px;font-weight:700;color:#6070C8;cursor:pointer;">
-      🗓 全部日期 +1 天
-    </button>
-  </div>
+
 
 </div>
 
@@ -1414,25 +1405,6 @@ let selFxEmoji = '💳';
 let currentTheme = localStorage.getItem('fTheme') || 'A';
 
 // ══ SAVE / HELPERS ══
-function fixAllDates() {
-  if (!confirm('確定要把所有記錄日期都 +1 天？\n建議先匯出 Excel 備份。')) return;
-  let count = 0;
-  D.txs.forEach(tx => {
-    if (!tx.dk) return;
-    const dk = tx.dk.slice(0,10);
-    const parts = dk.split('-');
-    const d = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
-    d.setDate(d.getDate() + 1);
-    const newDk = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    tx.dk = newDk;
-    tx.mk = newDk.slice(0,7);
-    count++;
-  });
-  save();
-  toast(`已修正 ${count} 筆記錄 ✓`);
-  renderHome();
-}
-
 function save() {
   localStorage.setItem('fd2', JSON.stringify(D));
   // debounce cloud save
@@ -1449,6 +1421,16 @@ function getTK() {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 function fmtDk(dk) {
+  if (!dk) return '';
+  // 純日期格式直接回傳
+  if (/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(dk)) return dk;
+  // 舊資料含時區（如 2026-04-09T16:00:00.000Z）→ 本地時間解析
+  try {
+    const d = new Date(dk);
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  } catch(e) { return dk.slice(0,10); }
+}
+function _fmtDk_orig(dk) {
   if (!dk) return '';
   // 如果是純日期格式 YYYY-MM-DD 直接回傳
   if (/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(dk)) return dk;
@@ -1637,9 +1619,10 @@ function addTx() {
     return;
   }
 
-  const hdRaw = document.getElementById('histDateInp').value || getTK();
-  // 強制當成本地日期，避免時區轉換造成少一天
-  const dk = hdRaw.slice(0,10);
+  // 永遠用本地時間，input 有值就用，沒有就用今天
+  const diEl = document.getElementById('histDateInp');
+  const hdRaw = (diEl && diEl.value) ? diEl.value : getTK();
+  const dk = hdRaw.slice(0,10);  // 只取 YYYY-MM-DD
   const mk2 = dk.slice(0,7);
   // 判斷是否已封存月份
   const isSealed = (D.snapshots||[]).some(s=>s.mk===mk2);
@@ -1650,7 +1633,9 @@ function addTx() {
   save();
   document.getElementById('amtInp').value='';
   document.getElementById('noteInp').value='';
-  document.getElementById('histDateInp').value = getTK();
+  // 重設為今天（本地時間）
+  const _resetDi = document.getElementById('histDateInp');
+  if (_resetDi) _resetDi.value = getTK();
   document.getElementById('sealedWarning').style.display='none';
   selCat=null;
   toast(isSealed?'已記錄（封存月份，不影響餘額）📅':txType==='inc'?'收入已記錄 💰':'記帳成功！☀️');
@@ -3525,6 +3510,9 @@ document.getElementById('hdrDate').textContent =
 
 applyTheme();
 setTxType('exp');
+// 確保日期欄位初始為今天
+const _di = document.getElementById('histDateInp');
+if (_di) _di.value = getTK();
 // Data will load after Firebase auth in onAuthStateChanged
 // Fallback: if no user after 3s, use localStorage
 setTimeout(()=>{
