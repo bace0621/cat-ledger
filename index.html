@@ -511,6 +511,10 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
         <label class="flbl">付款帳戶</label>
         <select class="finp" id="clmAcc"></select>
       </div>
+      <div class="fg">
+        <label class="flbl">交易日期</label>
+        <input type="date" class="finp" id="clmDate">
+      </div>
       <button class="btn-main" onclick="addClaim()" style="background:linear-gradient(135deg,#E8A800,#B07800)">記錄墊款 🧾</button>
     </div>
 
@@ -1517,6 +1521,8 @@ function setTxType(t) {
     renderTrfSels();
   } else if (t==='clm') {
     renderClmAccSel();
+    const cd = document.getElementById('clmDate');
+    if (cd) cd.value = getTK();
   }
 }
 
@@ -1669,12 +1675,17 @@ function addClaim() {
   if (!acc) { toast('請選擇付款帳戶'); return; }
   if (!D.claims) D.claims = [];
   const claimId = 'clm'+Date.now();
-  D.claims.push({id:claimId, amt, note, acc, mk:curMK(), dk:getTK(), ts:Date.now(), status:'pending'});
+  const clmDateEl = document.getElementById('clmDate');
+  const clmDk = (clmDateEl && clmDateEl.value) ? clmDateEl.value.slice(0,10) : getTK();
+  const clmMk = clmDk.slice(0,7);
+  D.claims.push({id:claimId, amt, note, acc, mk:clmMk, dk:clmDk, ts:Date.now(), status:'pending'});
   // also push a tx that affects account balance but is tagged as claim (not budget)
-  D.txs.push({id:'tx'+Date.now(), type:'clm', amt, cat:'clm', acc, note, mk:curMK(), dk:getTK(), ts:Date.now(), claimId});
+  D.txs.push({id:'tx'+Date.now(), type:'clm', amt, cat:'clm', acc, note, mk:clmMk, dk:clmDk, ts:Date.now(), claimId});
   save();
   document.getElementById('clmAmt').value='';
   document.getElementById('clmNote').value='';
+  const _cd = document.getElementById('clmDate');
+  if (_cd) _cd.value = getTK();
   toast('墊款已記錄 🧾');
   renderHome();
 }
