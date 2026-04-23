@@ -1794,18 +1794,20 @@ function renderHome() {
     <div id="subDetail_${cat.id}" style="display:none;padding:8px 0 4px 40px;border-bottom:1px solid var(--bdr)"></div>`;
   }).join('') || '<div class="empty"><p>尚未設定子預算</p></div>';
 
-  // Recent txs (last 20)
+  // Recent txs
   const query = getSearchQuery();
   const allCatsSearch = [...D.cats, ...getIncCats()];
-  const recent = [...D.txs].sort((a,b)=>b.ts-a.ts).filter(tx => {
-    if (!query) return true;
-    const cat = allCatsSearch.find(c=>c.id===tx.cat)||{name:''};
-    const acc = D.accounts.find(a=>a.id===tx.acc)||{name:''};
-    return (tx.note||'').toLowerCase().includes(query) ||
-           cat.name.toLowerCase().includes(query) ||
-           acc.name.toLowerCase().includes(query) ||
-           String(tx.amt).includes(query);
-  }).slice(0,50);
+  const sorted = [...D.txs].sort((a,b)=>b.ts-a.ts);
+  const recent = query
+    ? sorted.filter(tx => {
+        const cat = allCatsSearch.find(c=>c.id===tx.cat)||{name:''};
+        const acc = D.accounts.find(a=>a.id===tx.acc)||{name:''};
+        return (tx.note||'').toLowerCase().includes(query) ||
+               cat.name.toLowerCase().includes(query) ||
+               acc.name.toLowerCase().includes(query) ||
+               String(tx.amt).includes(query);
+      })
+    : sorted.slice(0,50);
   // 按日期分組
   const allCatsR = [...D.cats,...getIncCats()];
   const grouped = {};
