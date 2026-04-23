@@ -536,6 +536,10 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
         <label class="flbl">備註（選填）</label>
         <textarea class="note-inp" id="trfNote" placeholder="備註..."></textarea>
       </div>
+      <div class="fg">
+        <label class="flbl">交易日期</label>
+        <input type="date" class="finp" id="trfDateInp">
+      </div>
       <button class="btn-main" onclick="addTransfer()">轉帳</button>
     </div>
   </div>
@@ -1428,11 +1432,18 @@ function fmtDk(dk) {
   if (!dk) return '';
   // 純日期格式直接回傳
   if (/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(dk)) return dk;
-  // 舊資料含時區（如 2026-04-09T16:00:00.000Z）→ 本地時間解析
+  // 舊資料含時區（如 2026-04-09T16:00:00.000Z）→ 強制用本地時間解析，避免 UTC 差 8 小時導致日期跑掉
   try {
+    const s = String(dk);
+    // 先取前 10 碼 YYYY-MM-DD，再加 T12:00:00 讓 Date() 解析時不受時區影響
+    const base = s.slice(0, 10);
+    if (/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(base)) return base;
+    // 含時區資訊的完整 ISO 字串（帶 Z 或 +offset），才需轉本地
     const d = new Date(dk);
-    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-  } catch(e) { return dk.slice(0,10); }
+    const off = d.getTimezoneOffset() * 60000;
+    const local = new Date(d.getTime() - off);
+    return local.toISOString().slice(0,10);
+  } catch(e) { return String(dk).slice(0,10); }
 }
 function _fmtDk_orig(dk) {
   if (!dk) return '';
@@ -1519,6 +1530,8 @@ function setTxType(t) {
     if (sw) sw.style.display='none';
   } else if (t==='trf') {
     renderTrfSels();
+    const td = document.getElementById('trfDateInp');
+    if (td && !td.value) td.value = getTK();
   } else if (t==='clm') {
     renderClmAccSel();
     const cd = document.getElementById('clmDate');
@@ -1658,10 +1671,14 @@ function addTransfer() {
   if (from===to) { toast('來源與目標帳戶不能相同'); return; }
   const fromObj = D.accounts.find(a=>a.id===from);
   const toObj = D.accounts.find(a=>a.id===to);
-  D.txs.push({id:'tx'+Date.now(), type:'trf', amt, from, to, fromName:fromObj?.name||'', toName:toObj?.name||'', note, mk:curMK(), dk:getTK(), ts:Date.now()});
+  const trfDateEl = document.getElementById('trfDateInp');
+  const trfDk = (trfDateEl && trfDateEl.value) ? trfDateEl.value.slice(0,10) : getTK();
+  const trfMk = trfDk.slice(0,7);
+  D.txs.push({id:'tx'+Date.now(), type:'trf', amt, from, to, fromName:fromObj?.name||'', toName:toObj?.name||'', note, mk:trfMk, dk:trfDk, ts:Date.now()});
   save();
   document.getElementById('trfAmt').value='';
   document.getElementById('trfNote').value='';
+  if (trfDateEl) trfDateEl.value = getTK();
   toast('轉帳完成 ↔');
   renderHome();
 }
