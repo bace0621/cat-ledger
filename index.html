@@ -1430,20 +1430,20 @@ function getTK() {
 }
 function fmtDk(dk) {
   if (!dk) return '';
-  // 純日期格式直接回傳
-  if (/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(dk)) return dk;
-  // 舊資料含時區（如 2026-04-09T16:00:00.000Z）→ 強制用本地時間解析，避免 UTC 差 8 小時導致日期跑掉
+  const s = String(dk).trim();
+  // 無論原始格式如何，先取前 10 碼 YYYY-MM-DD
+  // 這樣可處理：純日期、ISO字串、Google Sheets 回傳的各種格式
+  const base = s.slice(0, 10);
+  if (/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(base)) return base;
+  // 前 10 碼不是日期格式（例如 Sheets 回傳數字序列號），嘗試用本地時間解析
   try {
-    const s = String(dk);
-    // 先取前 10 碼 YYYY-MM-DD，再加 T12:00:00 讓 Date() 解析時不受時區影響
-    const base = s.slice(0, 10);
-    if (/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(base)) return base;
-    // 含時區資訊的完整 ISO 字串（帶 Z 或 +offset），才需轉本地
-    const d = new Date(dk);
-    const off = d.getTimezoneOffset() * 60000;
-    const local = new Date(d.getTime() - off);
-    return local.toISOString().slice(0,10);
-  } catch(e) { return String(dk).slice(0,10); }
+    const d = new Date(s);
+    if (isNaN(d.getTime())) return s.slice(0, 10);
+    // 用本地時間各欄位組回日期，完全不經過 UTC 轉換
+    return d.getFullYear() + '-' +
+           String(d.getMonth()+1).padStart(2,'0') + '-' +
+           String(d.getDate()).padStart(2,'0');
+  } catch(e) { return s.slice(0,10); }
 }
 function _fmtDk_orig(dk) {
   if (!dk) return '';
