@@ -548,6 +548,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
   <div class="card">
     <div class="card-ttl">🍩 本月收支分布</div>
     <div style="position:relative;width:100%;height:180px"><canvas id="homePieChart"></canvas></div>
+    <div id="homePieTotals" style="display:flex;justify-content:center;gap:20px;margin-top:10px;padding-top:10px;border-top:1px solid var(--bdr)"></div>
   </div>
 
   <!-- 子預算 -->
@@ -3327,6 +3328,8 @@ function renderHomePie() {
   destroyChart('homePie');
   if (totalExp===0 && totalInc===0) {
     canvas.parentElement.innerHTML = '<div style="height:180px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--txl)">本月尚無記錄</div>';
+    const totalsEl = document.getElementById('homePieTotals');
+    if (totalsEl) totalsEl.style.display = 'none';
     return;
   }
   // breakdown by category
@@ -3348,6 +3351,26 @@ function renderHomePie() {
       }
     }
   });
+  // 顯示支出／收入總額
+  const totalsEl = document.getElementById('homePieTotals');
+  if (totalsEl) {
+    totalsEl.style.display = 'flex';
+    totalsEl.innerHTML =
+      `<div style="text-align:center">
+        <div style="font-size:10px;font-weight:700;color:var(--txl);letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px">本月支出</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:18px;color:var(--a2)">${fmt(totalExp)}</div>
+      </div>
+      <div style="width:1px;background:var(--bdr);margin:0 4px"></div>
+      <div style="text-align:center">
+        <div style="font-size:10px;font-weight:700;color:var(--txl);letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px">本月收入</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:18px;color:#2A9A58">${fmt(totalInc)}</div>
+      </div>
+      <div style="width:1px;background:var(--bdr);margin:0 4px"></div>
+      <div style="text-align:center">
+        <div style="font-size:10px;font-weight:700;color:var(--txl);letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px">結餘</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:18px;color:${totalInc-totalExp>=0?'#2A9A58':'#D94040'}">${fmt(totalInc-totalExp)}</div>
+      </div>`;
+  }
 }
 
 // ══ ONBOARDING ══
