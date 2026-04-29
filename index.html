@@ -1001,6 +1001,64 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
   </div>
 </div>
 
+<!-- Edit payment modal -->
+<div id="editPaymentModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:200;align-items:center;justify-content:center;">
+  <div style="background:var(--surf);border-radius:var(--r);padding:24px;margin:0 20px;width:calc(100% - 40px);max-width:420px">
+    <div style="font-size:17px;font-weight:700;margin-bottom:16px">✏️ 編輯還款記錄</div>
+    <div class="fg">
+      <label class="flbl">還款金額</label>
+      <input type="number" class="finp" id="editPayAmt" placeholder="0" inputmode="decimal">
+    </div>
+    <div class="fg">
+      <label class="flbl">從哪個帳戶還款</label>
+      <select class="finp" id="editPayFromAcc"></select>
+    </div>
+    <div class="fg">
+      <label class="flbl">還款到哪張信用卡</label>
+      <select class="finp" id="editPayToAcc"></select>
+    </div>
+    <div class="fg">
+      <label class="flbl">還款日期</label>
+      <input type="date" class="finp" id="editPayDate">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
+      <button class="btn-ghost" style="margin-top:0" onclick="closeEditPayment()">取消</button>
+      <button class="btn-main" onclick="confirmEditPayment()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit fixed expense modal -->
+<div id="editFixedModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:200;align-items:center;justify-content:center;">
+  <div style="background:var(--surf);border-radius:var(--r);padding:24px;margin:0 20px;width:calc(100% - 40px);max-width:420px;max-height:85vh;overflow-y:auto">
+    <div style="font-size:17px;font-weight:700;margin-bottom:16px">✏️ 編輯固定扣款</div>
+    <div class="fg">
+      <label class="flbl">名稱</label>
+      <input type="text" class="finp" id="editFxName" placeholder="名稱">
+    </div>
+    <div class="fg">
+      <label class="flbl">金額</label>
+      <input type="number" class="finp" id="editFxAmt" placeholder="0" inputmode="decimal">
+    </div>
+    <div class="fg">
+      <label class="flbl">類別</label>
+      <select class="finp" id="editFxCat"></select>
+    </div>
+    <div class="fg">
+      <label class="flbl">扣款帳戶</label>
+      <select class="finp" id="editFxAcc"></select>
+    </div>
+    <div class="fg">
+      <label class="flbl">每月幾號扣款（1-28）</label>
+      <input type="number" class="finp" id="editFxDay" min="1" max="28" inputmode="numeric">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
+      <button class="btn-ghost" style="margin-top:0" onclick="closeEditFixed()">取消</button>
+      <button class="btn-main" onclick="confirmEditFixed()">儲存</button>
+    </div>
+  </div>
+</div>
+
 <!-- Edit account modal -->
 <div class="modal-overlay" id="editAccModal">
   <div class="modal-box">
@@ -1884,15 +1942,16 @@ function renderHome() {
         if (tx.type==='trf') {
           const fa = D.accounts.find(a=>a.id===tx.from);
           const ta = D.accounts.find(a=>a.id===tx.to);
+          const isCCPay = (tx.note||'').includes('信用卡還款');
           return `<div class="tx-item">
-            <div class="tx-ico trf">↔</div>
+            <div class="tx-ico trf">${isCCPay?'💳':'↔'}</div>
             <div class="tx-info">
               <div class="tx-name">${tx.note||'轉帳'}</div>
               <div class="tx-meta">${fmtDk(tx.dk)} · ${fa?.name||tx.fromName||'未知'} → ${ta?.name||tx.toName||'未知'}</div>
             </div>
             <div class="tx-amt trf">${fmt(tx.amt)}</div>
-            <button class="tx-del" onclick="openEditTx('${tx.id}')" style="opacity:0.4;font-size:13px" title="編輯">✏️</button>
-          <button class="tx-del" onclick="deleteTx('${tx.id}')">✕</button>
+            <button class="tx-del" onclick="${isCCPay?'openEditPayment':'openEditTx'}('${tx.id}')" style="opacity:0.4;font-size:13px" title="編輯">✏️</button>
+            <button class="tx-del" onclick="deleteTx('${tx.id}')">✕</button>
           </div>`;
         }
         if (tx.type==='clm'||tx.type==='settle') {
@@ -2240,7 +2299,7 @@ function renderFixedExpList() {
             <div class="acc-row-type">${acc?acc.name:'未知帳戶'} · 每月${fx.day||1}號 · ${fmt(fx.amt)}</div>
           </div>
           <div style="display:flex;gap:4px">
-            <button class="btn-sm ghost" onclick="editFixedDay('${fx.id}')" style="font-size:11px;padding:5px 9px">改日期</button>
+            <button class="btn-sm ghost" onclick="openEditFixed('${fx.id}')" style="font-size:11px;padding:5px 9px">✏️ 編輯</button>
             <button class="btn-sm danger" onclick="deleteFixedExp('${fx.id}')" style="font-size:11px;padding:5px 9px">刪除</button>
           </div>
         </div>`;
@@ -2285,6 +2344,49 @@ function editFixedDay(id) {
   fx.day = d;
   save();
   toast(`已改為每月 ${d} 號扣款 ✓`);
+  renderFixedExpList();
+}
+
+function openEditFixed(id) {
+  const fx = (D.fixedExp||[]).find(f=>f.id===id);
+  if (!fx) return;
+  document.getElementById('editFixedModal')._fxId = id;
+  document.getElementById('editFxName').value = fx.name||'';
+  document.getElementById('editFxAmt').value = fx.amt||'';
+  document.getElementById('editFxDay').value = fx.day||1;
+  // 類別選單
+  const catOpts = D.cats.map(ct=>'<option value="'+ct.id+'"'+(ct.id===fx.cat?' selected':'')+'>'+ct.emoji+' '+ct.name+'</option>').join('');
+  document.getElementById('editFxCat').innerHTML = catOpts;
+  // 帳戶選單
+  const accOpts = D.accounts.filter(a=>!a.archived).map(a=>'<option value="'+a.id+'"'+(a.id===fx.acc?' selected':'')+'>'+( a.emoji||'')+' '+a.name+'</option>').join('');
+  document.getElementById('editFxAcc').innerHTML = accOpts;
+  document.getElementById('editFixedModal').style.display = 'flex';
+}
+
+function closeEditFixed() {
+  document.getElementById('editFixedModal').style.display = 'none';
+}
+
+function confirmEditFixed() {
+  const id = document.getElementById('editFixedModal')._fxId;
+  const fx = (D.fixedExp||[]).find(f=>f.id===id);
+  if (!fx) return;
+  const name = document.getElementById('editFxName').value.trim();
+  const amt = parseFloat(document.getElementById('editFxAmt').value)||0;
+  const cat = document.getElementById('editFxCat').value;
+  const acc = document.getElementById('editFxAcc').value;
+  const day = parseInt(document.getElementById('editFxDay').value)||1;
+  if (!name) { toast('請輸入名稱'); return; }
+  if (!amt) { toast('請輸入金額'); return; }
+  if (day<1||day>28) { toast('扣款日請填 1-28'); return; }
+  fx.name = name;
+  fx.amt = amt;
+  fx.cat = cat;
+  fx.acc = acc;
+  fx.day = day;
+  save();
+  closeEditFixed();
+  toast('固定扣款已更新 ✓');
   renderFixedExpList();
 }
 
@@ -3584,6 +3686,57 @@ async function testGeminiKey() {
     document.getElementById('apiKeyStatus').textContent = '❌ ' + e.message.slice(0,50);
     document.getElementById('apiKeyStatus').style.color = '#D94040';
   }
+}
+
+// ══ EDIT PAYMENT ══
+let editPaymentTxId = null;
+
+function openEditPayment(txId) {
+  const tx = D.txs.find(t=>t.id===txId);
+  if (!tx) return;
+  editPaymentTxId = txId;
+  document.getElementById('editPayAmt').value = tx.amt||'';
+  document.getElementById('editPayDate').value = fmtDk(tx.dk)||getTK();
+  // 來源帳戶（排除信用卡）
+  const fromOpts = D.accounts
+    .filter(a=>!a.archived&&a.type!=='credit'&&a.type!=='loan')
+    .map(a=>'<option value="'+a.id+'"'+(a.id===tx.from?' selected':'')+'>'+( a.emoji||'')+' '+a.name+'</option>').join('');
+  document.getElementById('editPayFromAcc').innerHTML = fromOpts;
+  // 目標信用卡
+  const toOpts = D.accounts
+    .filter(a=>a.type==='credit'&&!a.archived)
+    .map(a=>'<option value="'+a.id+'"'+(a.id===tx.to?' selected':'')+'>'+( a.emoji||'💳')+' '+a.name+'</option>').join('');
+  document.getElementById('editPayToAcc').innerHTML = toOpts;
+  document.getElementById('editPaymentModal').style.display = 'flex';
+}
+
+function closeEditPayment() {
+  document.getElementById('editPaymentModal').style.display = 'none';
+  editPaymentTxId = null;
+}
+
+function confirmEditPayment() {
+  const tx = D.txs.find(t=>t.id===editPaymentTxId);
+  if (!tx) return;
+  const amt = parseFloat(document.getElementById('editPayAmt').value)||0;
+  const fromAcc = document.getElementById('editPayFromAcc').value;
+  const toAcc = document.getElementById('editPayToAcc').value;
+  const dk = (document.getElementById('editPayDate').value||getTK()).slice(0,10);
+  if (!amt||amt<=0) { toast('請輸入金額'); return; }
+  const fromObj = D.accounts.find(a=>a.id===fromAcc);
+  const toObj = D.accounts.find(a=>a.id===toAcc);
+  tx.amt = amt;
+  tx.from = fromAcc;
+  tx.to = toAcc;
+  tx.fromName = fromObj?fromObj.name:'';
+  tx.toName = toObj?toObj.name:'';
+  tx.dk = dk;
+  tx.mk = dk.slice(0,7);
+  save();
+  closeEditPayment();
+  toast('還款記錄已更新 ✓');
+  renderHome();
+  renderAccounts();
 }
 
 // ══ SEARCH ══
