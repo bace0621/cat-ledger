@@ -659,6 +659,17 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
   <!-- 信用卡帳單對帳 -->
   <div class="card" id="creditBillingCard" style="display:none">
     <div class="card-ttl">💳 信用卡帳單對帳</div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:6px;flex:1">
+        <span style="font-size:11px;font-weight:700;color:var(--txl);white-space:nowrap">從</span>
+        <input type="date" class="finp" id="billDateFrom" style="padding:8px 10px;font-size:13px">
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex:1">
+        <span style="font-size:11px;font-weight:700;color:var(--txl);white-space:nowrap">到</span>
+        <input type="date" class="finp" id="billDateTo" style="padding:8px 10px;font-size:13px">
+      </div>
+      <button onclick="renderCreditBilling()" class="btn-sm" style="padding:8px 14px">套用</button>
+    </div>
     <div id="creditBillingList"></div>
   </div>
 
@@ -1885,7 +1896,7 @@ function renderAccounts() {
   const el3=document.getElementById('accClmOwed'); if(el3) el3.textContent=fmt(tot-rec);
   const cl=document.getElementById('accClaimList');
   if(cl) {
-    const sorted=[...claims].sort((a,b)=>b.ts-a.ts).slice(0,5);
+    const sorted=[...claims].sort((a,b)=>{ if(a.status==='pending'&&b.status!=='pending') return -1; if(b.status==='pending'&&a.status!=='pending') return 1; return b.ts-a.ts; });
     cl.innerHTML = sorted.length===0 ? '<div class="empty"><p>尚無報帳記錄</p></div>'
       : sorted.map(clm=>{
         const isPending=clm.status==='pending';
@@ -2625,6 +2636,17 @@ function renderCreditBilling() {
   if (!activeCreditAccId || !creditAccs.find(a=>a.id===activeCreditAccId)) {
     activeCreditAccId = creditAccs[0].id;
   }
+  // 預設日期：上個月今天 ～ 今天
+  const fromEl2 = document.getElementById('billDateFrom');
+  const toEl2 = document.getElementById('billDateTo');
+  if (fromEl2 && !fromEl2.value) {
+    const lastMonth = new Date();
+    lastMonth.setMonth(lastMonth.getMonth()-1);
+    fromEl2.value = lastMonth.getFullYear()+'-'+String(lastMonth.getMonth()+1).padStart(2,'0')+'-'+String(lastMonth.getDate()).padStart(2,'0');
+  }
+  if (toEl2 && !toEl2.value) {
+    toEl2.value = getTK();
+  }
 
   // tabs for each credit card
   const tabs = creditAccs.map(a=>`
@@ -2633,9 +2655,19 @@ function renderCreditBilling() {
       ${a.emoji||'💳'} ${a.name||'信用卡'}
     </button>`).join('');
 
-  // get exp txs for this credit account
-  const txs = D.txs.filter(t=>t.type==='exp' && t.acc===activeCreditAccId)
-    .sort((a,b)=>b.ts-a.ts);
+  // 日期範圍篩選
+  const fromEl = document.getElementById('billDateFrom');
+  const toEl = document.getElementById('billDateTo');
+  const fromDk = fromEl?.value || '';
+  const toDk = toEl?.value || '';
+
+  const txs = D.txs.filter(t=>{
+    if (t.type!=='exp' || t.acc!==activeCreditAccId) return false;
+    const dk = fmtDk(t.dk)||'';
+    if (fromDk && dk < fromDk) return false;
+    if (toDk && dk > toDk) return false;
+    return true;
+  }).sort((a,b)=>b.dk?.localeCompare(a.dk||'')||b.ts-a.ts);
 
   const checkedTotal = txs.filter(t=>t.billed).reduce((s,t)=>s+t.amt,0);
   const uncheckedTotal = txs.filter(t=>!t.billed).reduce((s,t)=>s+t.amt,0);
