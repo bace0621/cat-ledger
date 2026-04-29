@@ -397,28 +397,6 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
 <!-- ══ 總覽 & 記帳 ══ -->
 <div id="pg-home" class="pg active">
 
-  <!-- A: 本月支出 & 收入 -->
-  <div class="sgrid">
-    <div class="scard">
-      <div class="scard-lbl">本月支出</div>
-      <div class="scard-val" id="totalSpent">$0</div>
-      <div class="scard-sub" id="txCount">0 筆</div>
-    </div>
-    <div class="scard">
-      <div class="scard-lbl">本月收入</div>
-      <div class="scard-val" id="totalIncome" style="color:#2A9A58">$0</div>
-      <div class="scard-sub">今日 <span id="todaySpent">$0</span></div>
-    </div>
-  </div>
-
-  <!-- B: 預算剩餘 hero -->
-  <div class="hero">
-    <div class="hero-lbl">本月預算剩餘</div>
-    <div class="hero-amt" id="budgetLeft">$0</div>
-    <div class="hero-sub" id="budgetSub"></div>
-    <div class="hero-bar-bg"><div class="hero-bar" id="budgetBar" style="width:100%"></div></div>
-  </div>
-
   <!-- 快速記帳 -->
   <div class="card">
     <div class="card-ttl">快速記帳</div>
@@ -544,17 +522,6 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
     </div>
   </div>
 
-  <!-- 本月收支分布 -->
-  <div class="card">
-    <div class="card-ttl">🍩 本月收支分布</div>
-    <div style="position:relative;width:100%;height:180px"><canvas id="homePieChart"></canvas></div>
-  </div>
-
-  <!-- 子預算 -->
-  <div class="card">
-    <div class="card-ttl">子預算追蹤</div>
-    <div id="subBudget"></div>
-  </div>
 
   <!-- 近期記錄 -->
   <div class="card">
@@ -563,6 +530,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
       <div style="display:flex;gap:6px">
         <button onclick="setViewMode('list')" id="btn-list" style="padding:5px 10px;border:1.5px solid var(--a1);border-radius:var(--rxs);background:var(--pale);font-family:inherit;font-size:11px;font-weight:700;color:var(--a2);cursor:pointer">📋 列表</button>
         <button onclick="setViewMode('cal')" id="btn-cal" style="padding:5px 10px;border:1.5px solid var(--bdrm);border-radius:var(--rxs);background:var(--surf);font-family:inherit;font-size:11px;font-weight:700;color:var(--txm);cursor:pointer">📅 日曆</button>
+        <button onclick="scrollToQuickAdd()" style="padding:5px 10px;border:1.5px solid var(--bdrm);border-radius:var(--rxs);background:var(--surf);font-family:inherit;font-size:11px;font-weight:700;color:var(--txm);cursor:pointer">+ 新增</button>
       </div>
     </div>
     <div id="view-list">
@@ -581,6 +549,30 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
       <div id="calDetail" style="display:none;background:var(--bg);border-radius:var(--rsm);padding:12px;margin-top:8px;border:1px solid var(--bdr)"></div>
     </div>
   </div>
+</div>
+
+
+  <!-- 本月收支分布 -->
+  <div class="card">
+    <div class="card-ttl">🍩 本月收支分布</div>
+    <div style="position:relative;width:100%;height:180px"><canvas id="homePieChart"></canvas></div>
+  </div>
+
+  
+
+  <!-- B: 預算剩餘 hero -->
+
+  <!-- 子預算 -->
+  <div class="card">
+    <div class="card-ttl">子預算追蹤</div>
+    <div id="subBudget"></div>
+  </div>
+
+  
+</div>
+
+
+
 </div>
 
 <!-- ══ 帳戶 ══ -->
@@ -1018,6 +1010,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
       <label class="flbl">金額</label>
       <input type="number" class="finp" id="editAmt" placeholder="0" inputmode="decimal">
     </div>
+    <input type="hidden" id="_editCatVal">
     <div class="fg">
       <label class="flbl">備註</label>
       <textarea class="note-inp" id="editNote" placeholder="備註..."></textarea>
@@ -1025,6 +1018,10 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
     <div class="fg">
       <label class="flbl">日期</label>
       <input type="date" class="finp" id="editDate">
+    </div>
+    <div class="fg" id="editCatRow" style="display:none">
+      <label class="flbl">類別</label>
+      <div class="cgrid" id="editCatGrid" style="max-height:180px;overflow-y:auto"></div>
     </div>
     <div class="fg" id="editAccRow">
       <label class="flbl">帳戶</label>
@@ -2662,12 +2659,12 @@ function renderCreditBilling() {
   const toDk = toEl?.value || '';
 
   const txs = D.txs.filter(t=>{
-    if (t.type!=='exp' || t.acc!==activeCreditAccId) return false;
+    if (!['exp','clm'].includes(t.type) || t.acc!==activeCreditAccId) return false;
     const dk = fmtDk(t.dk)||'';
     if (fromDk && dk < fromDk) return false;
     if (toDk && dk > toDk) return false;
     return true;
-  }).sort((a,b)=>b.dk?.localeCompare(a.dk||'')||b.ts-a.ts);
+  }).sort((a,b)=>(b.dk||'').localeCompare(a.dk||'')||b.ts-a.ts);
 
   const checkedTotal = txs.filter(t=>t.billed).reduce((s,t)=>s+t.amt,0);
   const uncheckedTotal = txs.filter(t=>!t.billed).reduce((s,t)=>s+t.amt,0);
@@ -3506,6 +3503,16 @@ async function testGeminiKey() {
   }
 }
 
+// ══ QUICK ADD ══
+function scrollToQuickAdd() {
+  const el = document.getElementById('form-exp-inc');
+  if (el) {
+    el.scrollIntoView({behavior:'smooth', block:'start'});
+    const amt = document.getElementById('amtInp');
+    if (amt) setTimeout(()=>amt.focus(), 400);
+  }
+}
+
 // ══ SEARCH ══
 function getSearchQuery() {
   const el = document.getElementById('searchInp');
@@ -3524,14 +3531,30 @@ function openEditTx(id) {
   // 帳戶選單（轉帳類型不顯示）
   const accRow = document.getElementById('editAccRow');
   const accSel = document.getElementById('editAccSel');
+  const catRow = document.getElementById('editCatRow');
+  const catGrid = document.getElementById('editCatGrid');
   if (tx.type==='trf') {
     accRow.style.display = 'none';
+    if (catRow) catRow.style.display = 'none';
   } else {
     accRow.style.display = 'block';
     accSel.innerHTML = D.accounts.map(a=>`<option value="${a.id}">${a.emoji||''} ${a.name}</option>`).join('');
     if (tx.acc) {
       const idx = [...accSel.options].findIndex(o=>o.value===tx.acc);
       if (idx>=0) accSel.selectedIndex = idx;
+    }
+    // 類別選擇
+    if (catRow && catGrid) {
+      catRow.style.display = 'block';
+      const cats = tx.type==='inc' ? getIncCats() : D.cats.filter(ct=>!ct.archived);
+      let editSelCat = tx.cat || null;
+      const renderEditCats = () => {
+        catGrid.innerHTML = cats.map(ct=>`
+          <button class="cbtn ${editSelCat===ct.id?'sel':''}" onclick="editSelCat='${ct.id}';document.getElementById('_editCatVal').value='${ct.id}';document.querySelectorAll('#editCatGrid .cbtn').forEach(b=>b.classList.remove('sel'));this.classList.add('sel')">
+            <span class="ce">${ct.emoji}</span>${ct.name}
+          </button>`).join('');
+      };
+      renderEditCats();
     }
   }
   document.getElementById('editTxModal').classList.add('show');
@@ -3558,6 +3581,8 @@ function confirmEditTx() {
       const accObj = D.accounts.find(a=>a.id===accSel.value);
       if (accObj) tx.accName = accObj.name;
     }
+    const catVal = document.getElementById('_editCatVal')?.value;
+    if (catVal) tx.cat = catVal;
   }
   save();
   closeEditTx();
