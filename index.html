@@ -1020,10 +1020,6 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
       <label class="flbl">金額</label>
       <input type="number" class="finp" id="editAmt" placeholder="0" inputmode="decimal">
     </div>
-    <div class="fg" id="editCatRow" style="display:none">
-      <label class="flbl">類別</label>
-      <div class="cgrid" id="editCatGrid"></div>
-    </div>
     <div class="fg">
       <label class="flbl">備註</label>
       <textarea class="note-inp" id="editNote" placeholder="備註..."></textarea>
@@ -3509,10 +3505,7 @@ async function testGeminiKey() {
 
 // ══ QUICK ADD ══
 function scrollToQuickAdd() {
-  // 切回支出 tab 並滾動到快速記帳
   setTxType('exp');
-  const el = document.querySelector('.card-ttl');
-  // 找快速記帳的 card
   const cards = document.querySelectorAll('.card-ttl');
   for (const card of cards) {
     if (card.textContent.includes('快速記帳')) {
@@ -3520,7 +3513,6 @@ function scrollToQuickAdd() {
       break;
     }
   }
-  // focus 金額輸入
   setTimeout(()=>{
     const amt = document.getElementById('amtInp');
     if (amt) amt.focus();
@@ -3544,12 +3536,12 @@ function openEditTx(id) {
   document.getElementById('editNote').value = tx.note || '';
   document.getElementById('editDate').value = fmtDk(tx.dk) || getTK();
   // 類別選擇（支出/收入才顯示）
+  editSelCat = tx.cat || null;
   const catRow = document.getElementById('editCatRow');
   const catGrid = document.getElementById('editCatGrid');
   if ((tx.type==='exp'||tx.type==='inc') && catRow && catGrid) {
     catRow.style.display = 'block';
     const cats = tx.type==='inc' ? getIncCats() : D.cats.filter(ct=>!ct.archived);
-    editSelCat = tx.cat;
     catGrid.innerHTML = cats.map(cat=>`
       <button class="cbtn ${cat.id===tx.cat?'sel':''}" onclick="pickEditCat('${cat.id}')">
         <span class="ce">${cat.emoji}</span>${cat.name}
@@ -3584,16 +3576,11 @@ function openEditTx(id) {
 }
 function pickEditCat(id) {
   editSelCat = id;
-  const grid = document.getElementById('editCatGrid');
-  if (!grid) return;
-  grid.querySelectorAll('.cbtn').forEach(b=>{
-    b.classList.toggle('sel', b.onclick.toString().includes("'"+id+"'"));
-  });
-  // re-render
   const tx = D.txs.find(t=>t.id===editTxId);
   if (!tx) return;
   const cats = tx.type==='inc' ? getIncCats() : D.cats.filter(ct=>!ct.archived);
-  grid.innerHTML = cats.map(cat=>`
+  const grid = document.getElementById('editCatGrid');
+  if (grid) grid.innerHTML = cats.map(cat=>`
     <button class="cbtn ${cat.id===id?'sel':''}" onclick="pickEditCat('${cat.id}')">
       <span class="ce">${cat.emoji}</span>${cat.name}
     </button>`).join('');
