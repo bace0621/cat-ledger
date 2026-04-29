@@ -661,14 +661,10 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
   <!-- 信用卡帳單對帳 -->
   <div class="card" id="creditBillingCard" style="display:none">
     <div class="card-ttl">💳 信用卡帳單對帳</div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <div style="display:flex;align-items:center;gap:8px">
-        <label style="font-size:12px;font-weight:600;color:var(--txm);cursor:pointer">
-          <input type="checkbox" id="showPaidItems" onchange="renderCreditBilling()" style="margin-right:4px">
-          顯示已還款記錄
-        </label>
-      </div>
-    </div>
+    <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--txm);cursor:pointer;margin-bottom:12px">
+      <input type="checkbox" id="showPaidItems" onchange="renderCreditBilling()">
+      顯示已還款記錄
+    </label>
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
       <div style="display:flex;align-items:center;gap:6px;flex:1">
         <span style="font-size:11px;font-weight:700;color:var(--txl)">從</span>
@@ -2705,8 +2701,8 @@ function renderCreditBilling() {
     const dk=fmtDk(t.dk)||'';
     if (_from && dk<_from) return false;
     if (_to && dk>_to) return false;
-    const showPaid = document.getElementById('showPaidItems')?.checked||false;
-    if (!showPaid && t.paidAt) return false;
+    const _showPaid = document.getElementById('showPaidItems')?.checked||false;
+    if (!_showPaid && t.paidAt) return false;
     return true;
   }).sort((a,b)=>(b.dk||'').localeCompare(a.dk||'')||b.ts-a.ts);
 
@@ -2721,13 +2717,17 @@ function renderCreditBilling() {
         const cat = allCats.find(c=>c.id===tx.cat)||{emoji:'📦',name:tx.cat};
         const isClm = tx.type==='clm';
         const isPaid = !!tx.paidAt;
+        const clmTag = isClm ? ' <span style="font-size:10px;background:#FFF8E0;color:#A07000;padding:1px 6px;border-radius:99px;font-weight:700">墊款</span>' : '';
+        const paidTag = isPaid ? ' <span style="font-size:10px;background:#E0F5E8;color:#1A7A40;padding:1px 6px;border-radius:99px;font-weight:700">已還款</span>' : '';
+        const paidDate = isPaid ? ' · 還款日 '+tx.paidAt : '';
+        const chkCls = (isPaid||tx.billed) ? 'checked' : '';
         return `<div class="bill-item" style="opacity:${isPaid?0.45:1}">
-          <div class="bill-check ${isPaid||tx.billed?'checked':''}" ${isPaid?'':'onclick="toggleBilled(''+tx.id+'')"'}>
-            ${isPaid||tx.billed?'✓':''}
+          <div class="bill-check ${chkCls}" onclick="toggleBilled('${tx.id}')" style="cursor:${isPaid?'default':'pointer'}">
+            ${(isPaid||tx.billed)?'✓':''}
           </div>
           <div class="bill-info">
-            <div class="bill-name" style="text-decoration:${isPaid?'line-through':'none'}">${tx.note||cat.name}${isClm?' <span style="font-size:10px;background:#FFF8E0;color:#A07000;padding:1px 6px;border-radius:99px;font-weight:700">墊款</span>':''}${isPaid?' <span style="font-size:10px;background:#E0F5E8;color:#1A7A40;padding:1px 6px;border-radius:99px;font-weight:700">已還款</span>':''}</div>
-            <div class="bill-meta">${fmtDk(tx.dk)} · ${isClm?'報帳墊款':cat.name}${isPaid?' · 還款日 '+tx.paidAt:''}</div>
+            <div class="bill-name" style="text-decoration:${isPaid?'line-through':'none'}">${tx.note||cat.name}${clmTag}${paidTag}</div>
+            <div class="bill-meta">${fmtDk(tx.dk)} · ${isClm?'報帳墊款':cat.name}${paidDate}</div>
           </div>
           <div class="bill-amt" style="color:${isPaid?'var(--txl)':'var(--a2)'}">${fmt(tx.amt)}</div>
         </div>`;
@@ -2748,7 +2748,7 @@ function renderCreditBilling() {
 
 function toggleBilled(txId) {
   const tx = D.txs.find(t=>t.id===txId);
-  if (!tx) return;
+  if (!tx || tx.paidAt) return; // 已還款不能取消勾選
   tx.billed = !tx.billed;
   save();
   renderCreditBilling();
@@ -2765,8 +2765,9 @@ function payBill(accId) {
   document.getElementById('payBillUnchecked').textContent = '未勾選 '+fmt(uncheckedAmt);
   document.getElementById('payBillCustomAmt').value = checkedAmt||'';
   document.getElementById('payBillDate').value = getTK();
-  const fromOpts = D.accounts.filter(a=>!a.archived&&a.type!=='credit'&&a.type!=='loan')
-    .map(a=>`<option value="${a.id}">${a.emoji||''} ${a.name}</option>`).join('');
+  const fromOpts = D.accounts
+    .filter(a=>!a.archived&&a.type!=='credit'&&a.type!=='loan')
+    .map(a=>'<option value="'+a.id+'">'+(a.emoji||'')+' '+a.name+'</option>').join('');
   document.getElementById('payBillFromAcc').innerHTML = fromOpts;
   document.getElementById('payBillModal')._creditAccId = accId;
   document.getElementById('payBillModal').style.display = 'flex';
@@ -2779,7 +2780,7 @@ function confirmPayBill() {
   const accId = modal._creditAccId;
   const fromAcc = document.getElementById('payBillFromAcc').value;
   const amt = parseFloat(document.getElementById('payBillCustomAmt').value)||0;
-  const dk = document.getElementById('payBillDate').value||getTK();
+  const dk = (document.getElementById('payBillDate').value||getTK()).slice(0,10);
   if (!amt||amt<=0) { toast('請輸入還款金額'); return; }
   if (!fromAcc) { toast('請選擇還款帳戶'); return; }
   const fromObj = D.accounts.find(a=>a.id===fromAcc);
@@ -2787,13 +2788,13 @@ function confirmPayBill() {
   D.txs.push({
     id:'tx'+Date.now(), type:'trf', amt,
     from:fromAcc, to:accId,
-    fromName:fromObj?.name||'', toName:toObj?.name||'',
-    note:'信用卡還款', mk:dk.slice(0,7), dk:dk.slice(0,10), ts:Date.now()
+    fromName:fromObj?fromObj.name:'',
+    toName:toObj?toObj.name:'',
+    note:'信用卡還款', mk:dk.slice(0,7), dk:dk, ts:Date.now()
   });
-  // 把已勾選未還款的標記還款日
-  D.txs.forEach(tx=>{
+  D.txs.forEach(function(tx){
     if (['exp','clm'].includes(tx.type)&&tx.acc===accId&&tx.billed&&!tx.paidAt) {
-      tx.paidAt = dk.slice(0,10);
+      tx.paidAt = dk;
     }
   });
   save();
