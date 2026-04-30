@@ -30,6 +30,7 @@
   --shsm:0 2px 12px rgba(160,100,20,0.10), 0 1px 3px rgba(160,100,20,0.07);
   --paw:#F2A93B;
   --r:18px; --rsm:12px; --rxs:8px;
+  --fs-base: 1;
 }
 [data-theme="C"]{
   --paw:#5A9ED8;
@@ -103,13 +104,13 @@ body{font-family:'DM Sans','Noto Sans TC',sans-serif;background:var(--bg);color:
 .sb-item:last-child{border-bottom:none;}
 .sb-ico{font-size:22px;width:38px;height:38px;background:var(--pale);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .sb-info{flex:1;}
-.sb-name{font-size:18px;font-weight:700;color:var(--tx);}
+.sb-name{font-size:calc(18px * var(--fs-base));font-weight:700;color:var(--tx);}
 .sb-bw{height:5px;background:var(--pale2);border-radius:99px;margin-top:5px;}
 .sb-b{height:5px;border-radius:99px;transition:width .4s;}
 .sb-r{text-align:right;flex-shrink:0;}
-.sb-spent{font-size:18px;font-weight:700;}
-.sb-of{font-size:13px;color:var(--txl);margin-top:2px;}
-.sb-ratio{font-size:13px;color:var(--txm);margin-top:1px;font-weight:600;}
+.sb-spent{font-size:calc(18px * var(--fs-base));font-weight:700;}
+.sb-of{font-size:calc(13px * var(--fs-base));color:var(--txl);margin-top:2px;}
+.sb-ratio{font-size:calc(13px * var(--fs-base));color:var(--txm);margin-top:1px;font-weight:600;}
 
 /* Recent txs */
 .tx-item{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--bdr);}
@@ -735,6 +736,28 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
         <div class="theme-swatch" style="background:linear-gradient(135deg,#C8A0D8,#A070B8)"></div>
         <div class="theme-info"><div class="theme-name">💜 芋圓奶紫</div><div class="theme-sub">奶紫 × 粉紫溫柔</div></div>
       </div>
+    </div>
+  </div>
+
+  <!-- 字體大小 -->
+  <div class="card">
+    <div class="card-ttl">🔡 字體大小</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <span style="font-size:13px;color:var(--txm)">子預算、交易等列表字體</span>
+      <span id="fontScaleLabel" style="font-size:14px;font-weight:800;color:var(--a2)">100%</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:12px;color:var(--txl);white-space:nowrap">小 A</span>
+      <input type="range" id="fontScaleSlider" min="0.7" max="1.5" step="0.05" value="1"
+        oninput="applyFontScale(parseFloat(this.value))"
+        style="flex:1;accent-color:var(--a2);height:4px;cursor:pointer">
+      <span style="font-size:18px;color:var(--txl);white-space:nowrap">大 A</span>
+    </div>
+    <div style="display:flex;justify-content:center;gap:8px;margin-top:14px">
+      <button onclick="applyFontScale(0.85)" style="padding:6px 14px;border-radius:99px;border:1.5px solid var(--bdrm);background:var(--bg);font-family:inherit;font-size:12px;font-weight:700;color:var(--txm);cursor:pointer">小</button>
+      <button onclick="applyFontScale(1)" style="padding:6px 14px;border-radius:99px;border:1.5px solid var(--bdrm);background:var(--bg);font-family:inherit;font-size:12px;font-weight:700;color:var(--txm);cursor:pointer">預設</button>
+      <button onclick="applyFontScale(1.25)" style="padding:6px 14px;border-radius:99px;border:1.5px solid var(--bdrm);background:var(--bg);font-family:inherit;font-size:12px;font-weight:700;color:var(--txm);cursor:pointer">大</button>
+      <button onclick="applyFontScale(1.5)" style="padding:6px 14px;border-radius:99px;border:1.5px solid var(--bdrm);background:var(--bg);font-family:inherit;font-size:12px;font-weight:700;color:var(--txm);cursor:pointer">特大</button>
     </div>
   </div>
 
@@ -1538,6 +1561,19 @@ let selCatEmoji = '📦';
 let selFxEmoji = '💳';
 let currentTheme = localStorage.getItem('fTheme') || 'A';
 
+// ── Font scale ──
+let fontScale = parseFloat(localStorage.getItem('fFontScale') || '1');
+function applyFontScale(v) {
+  fontScale = v;
+  document.documentElement.style.setProperty('--fs-base', v);
+  localStorage.setItem('fFontScale', v);
+  const slider = document.getElementById('fontScaleSlider');
+  const label  = document.getElementById('fontScaleLabel');
+  if (slider) slider.value = v;
+  if (label)  label.textContent = Math.round(v * 100) + '%';
+}
+applyFontScale(fontScale);
+
 // ══ SAVE / HELPERS ══
 function save() {
   localStorage.setItem('fd2', JSON.stringify(D));
@@ -2213,6 +2249,7 @@ function toggleEmojiPicker(type) {
 // ══ RENDER SETTINGS ══
 function renderSettings() {
   applyTheme();
+  applyFontScale(fontScale); // sync slider
   // 載入自訂銀行
   if (D.customBanks) D.customBanks.forEach(b=>{ if(!BANK_ICONS.find(x=>x.id===b.id)) BANK_ICONS.push(b); });
   renderCustomBankList();
