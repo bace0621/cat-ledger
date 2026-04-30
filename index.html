@@ -1565,7 +1565,7 @@ let currentTheme = localStorage.getItem('fTheme') || 'A';
 let fontScale = parseFloat(localStorage.getItem('fFontScale') || '1');
 function applyFontScale(v) {
   fontScale = v;
-  document.documentElement.style.setProperty('--fs-base', v);
+  document.body.style.zoom = v;
   localStorage.setItem('fFontScale', v);
   const slider = document.getElementById('fontScaleSlider');
   const label  = document.getElementById('fontScaleLabel');
@@ -1957,7 +1957,7 @@ function renderHome() {
       </div>
       <div class="sb-r">
         <div class="sb-spent" style="color:${isOver?'#CC2020':'var(--a2)'}">${fmt(spent)}</div>
-        <div class="sb-ratio">${fmt(spent)} / ${fmt(cat.budget)}</div>
+        <div class="sb-ratio">${Math.round(pctU)}%</div>
         <div class="sb-of">${isOver?'超支 '+fmt(-rem):'剩 '+fmt(rem)}</div>
       </div>
     </div>
