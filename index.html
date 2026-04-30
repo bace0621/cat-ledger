@@ -546,7 +546,13 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
 
   <!-- 本月收支分布 -->
   <div class="card">
-    <div class="card-ttl">🍩 本月收支分布</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="card-ttl" style="margin-bottom:0">🍩 本月收支分布</div>
+      <div style="display:flex;gap:4px">
+        <button id="pieTabExp" onclick="setPieTab('exp')" style="padding:4px 12px;border-radius:99px;border:1.5px solid var(--a2);background:var(--a2);color:#fff;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s">支出</button>
+        <button id="pieTabInc" onclick="setPieTab('inc')" style="padding:4px 12px;border-radius:99px;border:1.5px solid var(--bdrm);background:transparent;color:var(--txm);font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s">收入</button>
+      </div>
+    </div>
     <div style="position:relative;width:100%;height:180px"><canvas id="homePieChart"></canvas></div>
     <div id="homePieTotals" style="display:flex;justify-content:center;gap:20px;margin-top:10px;padding-top:10px;border-top:1px solid var(--bdr)"></div>
   </div>
@@ -3322,6 +3328,22 @@ function toggleSubDetail(catId) {
 }
 
 // ══ HOME PIE CHART ══
+let homePieTab = 'exp';
+function setPieTab(tab) {
+  homePieTab = tab;
+  const btnExp = document.getElementById('pieTabExp');
+  const btnInc = document.getElementById('pieTabInc');
+  if (btnExp && btnInc) {
+    if (tab === 'exp') {
+      btnExp.style.background = 'var(--a2)'; btnExp.style.borderColor = 'var(--a2)'; btnExp.style.color = '#fff';
+      btnInc.style.background = 'transparent'; btnInc.style.borderColor = 'var(--bdrm)'; btnInc.style.color = 'var(--txm)';
+    } else {
+      btnInc.style.background = '#1A8840'; btnInc.style.borderColor = '#1A8840'; btnInc.style.color = '#fff';
+      btnExp.style.background = 'transparent'; btnExp.style.borderColor = 'var(--bdrm)'; btnExp.style.color = 'var(--txm)';
+    }
+  }
+  renderHomePie();
+}
 function renderHomePie() {
   const mk = curMK();
   const exps = D.txs.filter(t=>
@@ -3343,25 +3365,32 @@ function renderHomePie() {
     if (totalsEl) totalsEl.style.display = 'none';
     return;
   }
-  // breakdown by category
+  // build breakdown by category for active tab
+  const activeTxs = homePieTab === 'exp' ? exps : incs;
   const byCat = {};
-  exps.forEach(t=>{ byCat[t.cat]=(byCat[t.cat]||0)+t.amt; });
+  activeTxs.forEach(t=>{ byCat[t.cat]=(byCat[t.cat]||0)+t.amt; });
   const entries = Object.entries(byCat).sort((a,b)=>b[1]-a[1]).slice(0,6);
-  const pieColors = ['#F2A93B','#F28B70','#6090E0','#2A9A58','#E08030','#9060C0'];
-  chartInsts['homePie'] = new Chart(canvas, {
-    type:'doughnut',
-    data:{
-      labels: entries.map(([id])=>{ const ct=[...D.cats,...getIncCats()].find(c=>c.id===id); return ct?ct.emoji+ct.name:id; }),
-      datasets:[{ data:entries.map(([,v])=>v), backgroundColor:pieColors, borderWidth:2, borderColor:'#fff' }]
-    },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{
-        legend:{display:true,position:'right',labels:{font:{size:10},boxWidth:10,padding:6}},
-        tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${fmt(ctx.raw)}`}}
+  const expColors = ['#F2A93B','#F28B70','#E08030','#D4641E','#C8904A','#9060C0'];
+  const incColors = ['#2A9A58','#4EB87A','#1A7040','#80C898','#60A878','#38B870'];
+  const pieColors = homePieTab === 'exp' ? expColors : incColors;
+  if (!entries.length) {
+    canvas.parentElement.innerHTML = `<div style="height:180px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--txl)">本月尚無${homePieTab==='exp'?'支出':'收入'}記錄</div>`;
+  } else {
+    chartInsts['homePie'] = new Chart(canvas, {
+      type:'doughnut',
+      data:{
+        labels: entries.map(([id])=>{ const ct=[...D.cats,...getIncCats()].find(c=>c.id===id); return ct?ct.emoji+ct.name:id; }),
+        datasets:[{ data:entries.map(([,v])=>v), backgroundColor:pieColors, borderWidth:2, borderColor:'var(--surf)' }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{
+          legend:{display:true,position:'right',labels:{font:{size:10},boxWidth:10,padding:6}},
+          tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${fmt(ctx.raw)}`}}
+        }
       }
-    }
-  });
+    });
+  }
   // 顯示支出／收入總額
   const totalsEl = document.getElementById('homePieTotals');
   if (totalsEl) {
@@ -3374,12 +3403,12 @@ function renderHomePie() {
       <div style="width:1px;background:var(--bdr);margin:0 4px"></div>
       <div style="text-align:center">
         <div style="font-size:10px;font-weight:700;color:var(--txl);letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px">本月收入</div>
-        <div style="font-family:'DM Serif Display',serif;font-size:18px;color:#2A9A58">${fmt(totalInc)}</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:18px;color:#1A8840">${fmt(totalInc)}</div>
       </div>
       <div style="width:1px;background:var(--bdr);margin:0 4px"></div>
       <div style="text-align:center">
         <div style="font-size:10px;font-weight:700;color:var(--txl);letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px">結餘</div>
-        <div style="font-family:'DM Serif Display',serif;font-size:18px;color:${totalInc-totalExp>=0?'#2A9A58':'#D94040'}">${fmt(totalInc-totalExp)}</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:18px;color:${totalInc-totalExp>=0?'#1A8840':'#CC2020'}">${fmt(totalInc-totalExp)}</div>
       </div>`;
   }
 }
