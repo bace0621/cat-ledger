@@ -410,7 +410,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
     <div class="scard">
       <div class="scard-lbl">本月收入</div>
       <div class="scard-val" id="totalIncome" style="color:#2A9A58">$0</div>
-      <div class="scard-sub">今日 <span id="todaySpent">$0</span></div>
+      <div class="scard-sub">今日支出 <span id="todaySpent">$0</span></div>
     </div>
   </div>
 
@@ -547,30 +547,10 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
     </div>
   </div>
 
-  <!-- 本月收支分布 -->
-  <div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <div class="card-ttl" style="margin-bottom:0">🍩 本月收支分布</div>
-      <div style="display:flex;gap:4px">
-        <button id="pieTabExp" onclick="setPieTab('exp')" style="padding:4px 12px;border-radius:99px;border:1.5px solid var(--a2);background:var(--a2);color:#fff;font-family:inherit;font-size:1.1rem;font-weight:700;cursor:pointer;transition:all .15s">支出</button>
-        <button id="pieTabInc" onclick="setPieTab('inc')" style="padding:4px 12px;border-radius:99px;border:1.5px solid var(--bdrm);background:transparent;color:var(--txm);font-family:inherit;font-size:1.1rem;font-weight:700;cursor:pointer;transition:all .15s">收入</button>
-      </div>
-    </div>
-    <div style="position:relative;width:100%;height:180px"><canvas id="homePieChart"></canvas></div>
-    <div id="homePieTotals" style="display:flex;justify-content:center;gap:20px;margin-top:10px;padding-top:10px;border-top:1px solid var(--bdr)"></div>
-  </div>
-
-  <!-- 子預算 -->
-  <div class="card">
-    <div class="card-ttl">子預算追蹤</div>
-    <div id="subBudget"></div>
-  </div>
-
   <!-- 近期記錄 -->
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
       <div class="card-ttl" style="margin-bottom:0">近期記錄</div>
-      <button onclick="document.querySelector('.pg.active').scrollTo({top:0,behavior:'smooth'});setTimeout(()=>{document.getElementById('amtInp')?.focus()},400)" style="padding:5px 12px;border:1.5px solid var(--a1);border-radius:var(--rxs);background:var(--pale);font-family:inherit;font-size:1.1rem;font-weight:700;color:var(--a2);cursor:pointer">+ 新增</button>
       <div style="display:flex;gap:6px">
         <button onclick="scrollToQuickAdd()" style="padding:5px 10px;border:1.5px solid var(--bdrm);border-radius:var(--rxs);background:var(--surf);font-family:inherit;font-size:1.1rem;font-weight:700;color:var(--txm);cursor:pointer">✚ 新增</button>
         <button onclick="setViewMode('list')" id="btn-list" style="padding:5px 10px;border:1.5px solid var(--a1);border-radius:var(--rxs);background:var(--pale);font-family:inherit;font-size:1.1rem;font-weight:700;color:var(--a2);cursor:pointer">📋 列表</button>
@@ -593,6 +573,26 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
       <div id="calDetail" style="display:none;background:var(--bg);border-radius:var(--rsm);padding:12px;margin-top:8px;border:1px solid var(--bdr)"></div>
     </div>
   </div>
+
+  <!-- 本月收支分布 -->
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="card-ttl" style="margin-bottom:0">🍩 本月收支分布</div>
+      <div style="display:flex;gap:4px">
+        <button id="pieTabExp" onclick="setPieTab('exp')" style="padding:4px 12px;border-radius:99px;border:1.5px solid var(--a2);background:var(--a2);color:#fff;font-family:inherit;font-size:1.1rem;font-weight:700;cursor:pointer;transition:all .15s">支出</button>
+        <button id="pieTabInc" onclick="setPieTab('inc')" style="padding:4px 12px;border-radius:99px;border:1.5px solid var(--bdrm);background:transparent;color:var(--txm);font-family:inherit;font-size:1.1rem;font-weight:700;cursor:pointer;transition:all .15s">收入</button>
+      </div>
+    </div>
+    <div style="position:relative;width:100%;height:180px"><canvas id="homePieChart"></canvas></div>
+    <div id="homePieTotals" style="display:flex;justify-content:center;gap:20px;margin-top:10px;padding-top:10px;border-top:1px solid var(--bdr)"></div>
+  </div>
+
+  <!-- 子預算 -->
+  <div class="card">
+    <div class="card-ttl">子預算追蹤</div>
+    <div id="subBudget"></div>
+  </div>
+
 </div>
 
 <!-- ══ 帳戶 ══ -->
@@ -1243,7 +1243,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
 <div class="toast" id="toast"></div>
 
 <div class="bnav">
-  <button class="bb active" onclick="showPg('home',this)"><span class="ic">⌂</span>總覽</button>
+  <button class="bb active" onclick="showPg('home',this)"><span class="ic">⌂</span>記帳簿</button>
   <button class="bb" onclick="showPg('accounts',this)"><span class="ic">◈</span>帳戶</button>
   <button class="bb" onclick="showPg('report',this)"><span class="ic">📊</span>報表</button>
   <button class="bb" onclick="showPg('settings',this)"><span class="ic">⚙</span>設定</button>
@@ -1463,6 +1463,7 @@ if (!D.cats) D.cats = [
 ];
 if (!D.txs) D.txs = [];
 if (!D.fixedExp) D.fixedExp = [];
+migrateLegacyMK();
 
 const INC_CATS_DEFAULT = [
   {id:'salary',  name:'薪資',     emoji:'💼'},
@@ -1590,6 +1591,31 @@ function save() {
 function fmt(n) { return '$' + Math.round(Math.abs(n)).toLocaleString(); }
 function fmtSigned(n) { return (n >= 0 ? '+$' : '-$') + Math.round(Math.abs(n)).toLocaleString(); }
 function getMK(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }
+
+// 統一取得交易月份鍵，相容舊版 ISO 時間戳格式
+function txMK(t) {
+  // 優先用 dk（實際日期），再用 mk，都取前 7 碼 YYYY-MM
+  const dk7 = (t.dk||'').slice(0,7);
+  const mk7 = (t.mk||'').slice(0,7);
+  // 如果 dk7 是合法的 YYYY-MM 就用它，否則用 mk7
+  return /^\d{4}-\d{2}$/.test(dk7) ? dk7 : mk7;
+}
+
+// 修復舊版 ISO 時間戳格式的 mk，啟動時自動執行
+function migrateLegacyMK() {
+  let fixed = 0;
+  (D.txs||[]).forEach(t => {
+    const correct = txMK(t);
+    if (t.mk !== correct) {
+      t.mk = correct;
+      fixed++;
+    }
+  });
+  if (fixed > 0) {
+    save();
+    console.log(`[migrate] 修復 ${fixed} 筆交易的月份鍵`);
+  }
+}
 function getTK() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -2568,7 +2594,7 @@ function renderReport() {
 
   // Pie chart – this month category breakdown
   destroyChart('pie');
-  const curTxs = D.txs.filter(t=>t.mk===mk && t.type==='exp');
+  const curTxs = D.txs.filter(t=>txMK(t)===mk && t.type==='exp');
   const byCat = {};
   curTxs.forEach(t=>{ byCat[t.cat]=(byCat[t.cat]||0)+t.amt; });
   const pieEntries = Object.entries(byCat).sort((a,b)=>b[1]-a[1]).slice(0,8);
@@ -2592,8 +2618,8 @@ function renderReport() {
     const m = new Date(now2.getFullYear(), now2.getMonth()-i, 1);
     const bmk = getMK(m);
     barMonths.push((m.getMonth()+1)+'月');
-    barInc.push(D.txs.filter(t=>t.mk===bmk&&t.type==='inc').reduce((s,t)=>s+t.amt,0));
-    barExp.push(D.txs.filter(t=>t.mk===bmk&&t.type==='exp').reduce((s,t)=>s+t.amt,0));
+    barInc.push(D.txs.filter(t=>txMK(t)===bmk&&t.type==='inc').reduce((s,t)=>s+t.amt,0));
+    barExp.push(D.txs.filter(t=>txMK(t)===bmk&&t.type==='exp').reduce((s,t)=>s+t.amt,0));
   }
   chartInsts['bar'] = new Chart(document.getElementById('barChart'), {
     type:'bar',
@@ -2730,8 +2756,8 @@ function exportExcel() {
   for(let i=11;i>=0;i--){
     const m = new Date(now4.getFullYear(), now4.getMonth()-i, 1);
     const bmk = getMK(m);
-    const inc = D.txs.filter(t=>t.mk===bmk&&t.type==='inc').reduce((s,t)=>s+t.amt,0);
-    const exp = D.txs.filter(t=>t.mk===bmk&&t.type==='exp').reduce((s,t)=>s+t.amt,0);
+    const inc = D.txs.filter(t=>txMK(t)===bmk&&t.type==='inc').reduce((s,t)=>s+t.amt,0);
+    const exp = D.txs.filter(t=>txMK(t)===bmk&&t.type==='exp').reduce((s,t)=>s+t.amt,0);
     const snap = (D.snapshots||[]).find(s=>s.mk===bmk);
     months6.push({
       '月份': bmk,
