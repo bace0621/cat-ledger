@@ -101,14 +101,15 @@ body{font-family:'DM Sans','Noto Sans TC',sans-serif;background:var(--bg);color:
 /* Sub-budget */
 .sb-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bdr);}
 .sb-item:last-child{border-bottom:none;}
-.sb-ico{font-size:15px;width:32px;height:32px;background:var(--pale);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sb-ico{font-size:22px;width:38px;height:38px;background:var(--pale);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .sb-info{flex:1;}
-.sb-name{font-size:12px;font-weight:700;color:var(--tx);}
-.sb-bw{height:4px;background:var(--pale2);border-radius:99px;margin-top:4px;}
-.sb-b{height:4px;border-radius:99px;transition:width .4s;}
+.sb-name{font-size:18px;font-weight:700;color:var(--tx);}
+.sb-bw{height:5px;background:var(--pale2);border-radius:99px;margin-top:5px;}
+.sb-b{height:5px;border-radius:99px;transition:width .4s;}
 .sb-r{text-align:right;flex-shrink:0;}
-.sb-spent{font-size:12px;font-weight:700;}
-.sb-of{font-size:10px;color:var(--txl);margin-top:1px;}
+.sb-spent{font-size:18px;font-weight:700;}
+.sb-of{font-size:13px;color:var(--txl);margin-top:2px;}
+.sb-ratio{font-size:13px;color:var(--txm);margin-top:1px;font-weight:600;}
 
 /* Recent txs */
 .tx-item{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--bdr);}
@@ -1919,7 +1920,8 @@ function renderHome() {
         <div class="sb-bw"><div class="sb-b ${cls}" style="width:${pctU}%"></div></div>
       </div>
       <div class="sb-r">
-        <div class="sb-spent" style="color:${isOver?'#D94040':'var(--a2)'}">${fmt(spent)}</div>
+        <div class="sb-spent" style="color:${isOver?'#CC2020':'var(--a2)'}">${fmt(spent)}</div>
+        <div class="sb-ratio">${fmt(spent)} / ${fmt(cat.budget)}</div>
         <div class="sb-of">${isOver?'超支 '+fmt(-rem):'剩 '+fmt(rem)}</div>
       </div>
     </div>
@@ -3380,7 +3382,7 @@ function renderHomePie() {
       type:'doughnut',
       data:{
         labels: entries.map(([id])=>{ const ct=[...D.cats,...getIncCats()].find(c=>c.id===id); return ct?ct.emoji+ct.name:id; }),
-        datasets:[{ data:entries.map(([,v])=>v), backgroundColor:pieColors, borderWidth:2, borderColor:'var(--surf)' }]
+        datasets:[{ data:entries.map(([,v])=>v), backgroundColor:pieColors, borderWidth:1, borderColor:'#fff' }]
       },
       options:{
         responsive:true, maintainAspectRatio:false,
