@@ -343,9 +343,9 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
 
 <!-- Login screen -->
 <div id="loginScreen" class="login-screen">
-  <div class="login-logo" style="font-size:56px">🐾</div>
+  <div class="login-logo" style="font-size:5.6rem">🐾</div>
   <div class="login-title">貓貓帳務所</div>
-  <div class="login-sub">你的私人財務管家<br>用 Google 帳號登入，資料雲端同步<br><span style="font-size:12px;opacity:0.7">⚠️ 手機請用 Chrome 開啟，並允許彈出視窗</span></div>
+  <div class="login-sub">你的私人財務管家<br>用 Google 帳號登入，資料雲端同步<br><span style="font-size:1.2rem;opacity:0.7">⚠️ 手機請用 Chrome 開啟，並允許彈出視窗</span></div>
   <button class="login-btn" id="loginBtn" onclick="if(window.signInWithGoogle){window.signInWithGoogle()}else{alert('頁面載入中，請稍候再試')}"">
     <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
     使用 Google 帳號登入
@@ -354,7 +354,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
 
 <!-- Onboarding screen -->
 <div id="onboardScreen" class="onboard-screen" style="display:none">
-  <div style="font-size:52px;margin-bottom:12px">🐾</div>
+  <div style="font-size:5.2rem;margin-bottom:12px">🐾</div>
   <div class="onboard-title">歡迎來到貓貓帳務所</div>
   <div class="onboard-sub">開始之前，先建立你的帳戶<br>之後每筆記帳都會知道錢從哪裡來、到哪裡去</div>
   <div class="onboard-step">
@@ -388,7 +388,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
   </span>貓貓帳務所</div>
   <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
     <div class="hdr-date" id="hdrDate"></div>
-    <button onclick="manualSync()" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);border-radius:99px;color:white;font-family:inherit;font-size:11px;font-weight:600;padding:4px 12px;cursor:pointer;">🔄 同步</button>
+    <button onclick="manualSync()" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);border-radius:99px;color:white;font-family:inherit;font-size:1.1rem;font-weight:600;padding:4px 12px;cursor:pointer;">🔄 同步</button>
   </div>
   <div class="user-bar">
     <img id="userAvatar" class="user-avatar" src="" style="display:none">
@@ -436,7 +436,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
     <!-- 支出 / 收入 共用區 -->
     <div id="form-exp-inc">
       <div class="fg">
-        <label class="flbl">金額 <button class="btn-sm ghost" onclick="toggleCalc()" style="font-size:11px;padding:3px 8px;margin-left:8px">🧮 計算機</button><button class="btn-sm ghost" id="voiceBtn" onclick="startVoice()" style="font-size:11px;padding:3px 8px;margin-left:4px;display:none">🎤 語音</button><button class="btn-sm ghost" id="ocrBtn" onclick="startOCR()" style="font-size:11px;padding:3px 8px;margin-left:4px;display:none">📸 截圖</button></label>
+        <label class="flbl">金額 <button class="btn-sm ghost" onclick="toggleCalc()" style="font-size:1.1rem;padding:3px 8px;margin-left:8px">🧮 計算機</button><button class="btn-sm ghost" id="voiceBtn" onclick="startVoice()" style="font-size:1.1rem;padding:3px 8px;margin-left:4px;display:none">🎤 語音</button><button class="btn-sm ghost" id="ocrBtn" onclick="startOCR()" style="font-size:1.1rem;padding:3px 8px;margin-left:4px;display:none">📸 截圖</button></label>
         <input type="number" class="finp" id="amtInp" placeholder="0" inputmode="decimal">
         <div class="calc-wrap" id="calcWrap" style="display:none">
           <div class="calc-display" id="calcDisplay">0</div>
@@ -476,7 +476,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
       </div>
       <!-- 代墊還款沖銷選項：選 repay 類別時才顯示 -->
       <div id="repayClaimSection" style="display:none">
-        <div style="background:#FFF8E0;border-radius:var(--rsm);padding:12px;margin-bottom:12px;font-size:12px;color:#7A5800;line-height:1.6">
+        <div style="background:#FFF8E0;border-radius:var(--rsm);padding:12px;margin-bottom:12px;font-size:1.2rem;color:#7A5800;line-height:1.6">
           ↩️ 這筆是報帳回款，選擇對應墊款後自動沖銷，<b>不計入個人收入</b>。
         </div>
         <div class="fg">
@@ -490,7 +490,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
       <div class="fg">
         <label class="flbl">交易日期</label>
         <input type="date" class="finp" id="histDateInp" onchange="onTxDateChange()">
-        <div id="sealedWarning" style="display:none;margin-top:6px;padding:8px 12px;background:#FFF8E0;border-radius:var(--rxs);font-size:12px;color:#7A5800">
+        <div id="sealedWarning" style="display:none;margin-top:6px;padding:8px 12px;background:#FFF8E0;border-radius:var(--rxs);font-size:1.2rem;color:#7A5800">
           ⚠️ 此月份已封存，這筆記錄<b>不會影響帳戶餘額</b>，僅做記錄用途。
         </div>
       </div>
@@ -499,7 +499,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
 
     <!-- 報帳墊款區 -->
     <div id="form-clm" style="display:none">
-      <div style="background:#FFF8E0;border-radius:var(--rsm);padding:12px;margin-bottom:14px;font-size:12px;color:#7A5800;line-height:1.6">
+      <div style="background:#FFF8E0;border-radius:var(--rsm);padding:12px;margin-bottom:14px;font-size:1.2rem;color:#7A5800;line-height:1.6">
         💡 墊款不計入個人支出預算。沖銷時請至報表頁→報帳本操作。
       </div>
       <div class="fg">
@@ -552,8 +552,8 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
       <div class="card-ttl" style="margin-bottom:0">🍩 本月收支分布</div>
       <div style="display:flex;gap:4px">
-        <button id="pieTabExp" onclick="setPieTab('exp')" style="padding:4px 12px;border-radius:99px;border:1.5px solid var(--a2);background:var(--a2);color:#fff;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s">支出</button>
-        <button id="pieTabInc" onclick="setPieTab('inc')" style="padding:4px 12px;border-radius:99px;border:1.5px solid var(--bdrm);background:transparent;color:var(--txm);font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s">收入</button>
+        <button id="pieTabExp" onclick="setPieTab('exp')" style="padding:4px 12px;border-radius:99px;border:1.5px solid var(--a2);background:var(--a2);color:#fff;font-family:inherit;font-size:1.1rem;font-weight:700;cursor:pointer;transition:all .15s">支出</button>
+        <button id="pieTabInc" onclick="setPieTab('inc')" style="padding:4px 12px;border-radius:99px;border:1.5px solid var(--bdrm);background:transparent;color:var(--txm);font-family:inherit;font-size:1.1rem;font-weight:700;cursor:pointer;transition:all .15s">收入</button>
       </div>
     </div>
     <div style="position:relative;width:100%;height:180px"><canvas id="homePieChart"></canvas></div>
@@ -570,11 +570,11 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
       <div class="card-ttl" style="margin-bottom:0">近期記錄</div>
-      <button onclick="document.querySelector('.pg.active').scrollTo({top:0,behavior:'smooth'});setTimeout(()=>{document.getElementById('amtInp')?.focus()},400)" style="padding:5px 12px;border:1.5px solid var(--a1);border-radius:var(--rxs);background:var(--pale);font-family:inherit;font-size:11px;font-weight:700;color:var(--a2);cursor:pointer">+ 新增</button>
+      <button onclick="document.querySelector('.pg.active').scrollTo({top:0,behavior:'smooth'});setTimeout(()=>{document.getElementById('amtInp')?.focus()},400)" style="padding:5px 12px;border:1.5px solid var(--a1);border-radius:var(--rxs);background:var(--pale);font-family:inherit;font-size:1.1rem;font-weight:700;color:var(--a2);cursor:pointer">+ 新增</button>
       <div style="display:flex;gap:6px">
-        <button onclick="scrollToQuickAdd()" style="padding:5px 10px;border:1.5px solid var(--bdrm);border-radius:var(--rxs);background:var(--surf);font-family:inherit;font-size:11px;font-weight:700;color:var(--txm);cursor:pointer">✚ 新增</button>
-        <button onclick="setViewMode('list')" id="btn-list" style="padding:5px 10px;border:1.5px solid var(--a1);border-radius:var(--rxs);background:var(--pale);font-family:inherit;font-size:11px;font-weight:700;color:var(--a2);cursor:pointer">📋 列表</button>
-        <button onclick="setViewMode('cal')" id="btn-cal" style="padding:5px 10px;border:1.5px solid var(--bdrm);border-radius:var(--rxs);background:var(--surf);font-family:inherit;font-size:11px;font-weight:700;color:var(--txm);cursor:pointer">📅 日曆</button>
+        <button onclick="scrollToQuickAdd()" style="padding:5px 10px;border:1.5px solid var(--bdrm);border-radius:var(--rxs);background:var(--surf);font-family:inherit;font-size:1.1rem;font-weight:700;color:var(--txm);cursor:pointer">✚ 新增</button>
+        <button onclick="setViewMode('list')" id="btn-list" style="padding:5px 10px;border:1.5px solid var(--a1);border-radius:var(--rxs);background:var(--pale);font-family:inherit;font-size:1.1rem;font-weight:700;color:var(--a2);cursor:pointer">📋 列表</button>
+        <button onclick="setViewMode('cal')" id="btn-cal" style="padding:5px 10px;border:1.5px solid var(--bdrm);border-radius:var(--rxs);background:var(--surf);font-family:inherit;font-size:1.1rem;font-weight:700;color:var(--txm);cursor:pointer">📅 日曆</button>
       </div>
     </div>
     <div id="view-list">
@@ -585,9 +585,9 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
     </div>
     <div id="view-cal" style="display:none">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <button onclick="calPrevMonth()" style="background:none;border:1.5px solid var(--bdrm);border-radius:var(--rxs);padding:6px 12px;font-size:14px;cursor:pointer;color:var(--txm)">‹</button>
-        <div style="font-family:'DM Serif Display',serif;font-size:16px" id="calTitle"></div>
-        <button onclick="calNextMonth()" style="background:none;border:1.5px solid var(--bdrm);border-radius:var(--rxs);padding:6px 12px;font-size:14px;cursor:pointer;color:var(--txm)">›</button>
+        <button onclick="calPrevMonth()" style="background:none;border:1.5px solid var(--bdrm);border-radius:var(--rxs);padding:6px 12px;font-size:1.4rem;cursor:pointer;color:var(--txm)">‹</button>
+        <div style="font-family:'DM Serif Display',serif;font-size:1.6rem" id="calTitle"></div>
+        <button onclick="calNextMonth()" style="background:none;border:1.5px solid var(--bdrm);border-radius:var(--rxs);padding:6px 12px;font-size:1.4rem;cursor:pointer;color:var(--txm)">›</button>
       </div>
       <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px" id="calGrid"></div>
       <div id="calDetail" style="display:none;background:var(--bg);border-radius:var(--rsm);padding:12px;margin-top:8px;border:1px solid var(--bdr)"></div>
@@ -632,37 +632,37 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
     <div class="fg">
       <label class="flbl">現在這個帳戶有多少錢？</label>
       <input type="number" class="finp" id="newAccBal" placeholder="請輸入目前實際餘額" inputmode="decimal">
-      <div style="font-size:11px;color:var(--txl);margin-top:6px;line-height:1.5">
+      <div style="font-size:1.1rem;color:var(--txl);margin-top:6px;line-height:1.5">
         📌 這是帳本的起始基準。之後每筆記帳都會在這個金額上加減，請填入今天這個帳戶的真實金額。
       </div>
     </div>
     <div id="loanFields" style="display:none">
-      <div style="background:var(--pale);border-radius:var(--rsm);padding:12px;margin-bottom:14px;font-size:12px;color:var(--txm);line-height:1.6">
+      <div style="background:var(--pale);border-radius:var(--rsm);padding:12px;margin-bottom:14px;font-size:1.2rem;color:var(--txm);line-height:1.6">
         🏠 填入貸款資料後，每月本金和利息會自動計算，不需要手動查銀行 App。
       </div>
       <div class="fg"><label class="flbl">貸款總金額</label><input type="number" class="finp" id="newLoanTotal" placeholder="例：8000000" inputmode="decimal"></div>
       <div class="fg"><label class="flbl">年利率 (%)</label><input type="number" class="finp" id="newLoanRate" placeholder="例：2.06" step="0.01" inputmode="decimal"></div>
       <div class="fg"><label class="flbl">貸款年限</label><select class="finp" id="newLoanYears"><option value="20">20 年</option><option value="30" selected>30 年</option><option value="40">40 年</option></select></div>
       <div class="fg"><label class="flbl">第一期還款日</label><input type="month" class="finp" id="newLoanStart"></div>
-      <div class="fg"><label class="flbl">已還期數</label><input type="number" class="finp" id="newLoanPaid" placeholder="0" inputmode="numeric"><div style="font-size:11px;color:var(--txl);margin-top:6px">📌 系統會根據已還期數自動計算目前剩餘本金</div></div>
+      <div class="fg"><label class="flbl">已還期數</label><input type="number" class="finp" id="newLoanPaid" placeholder="0" inputmode="numeric"><div style="font-size:1.1rem;color:var(--txl);margin-top:6px">📌 系統會根據已還期數自動計算目前剩餘本金</div></div>
     </div>
     <div class="fg">
       <label class="flbl">圖示</label>
       <div style="margin-bottom:8px">
-        <div style="font-size:11px;font-weight:700;color:var(--txl);margin-bottom:6px">銀行 Icon</div>
+        <div style="font-size:1.1rem;font-weight:700;color:var(--txl);margin-bottom:6px">銀行 Icon</div>
         <div class="icon-grid" id="bankIconGrid"></div>
       </div>
       <div style="margin-top:10px">
-        <div style="font-size:11px;font-weight:700;color:var(--txl);margin-bottom:6px">或選 Emoji</div>
+        <div style="font-size:1.1rem;font-weight:700;color:var(--txl);margin-bottom:6px">或選 Emoji</div>
         <div class="row">
-          <span id="newAccEmojiDisplay" style="font-size:24px">🏦</span>
+          <span id="newAccEmojiDisplay" style="font-size:2.4rem">🏦</span>
           <button class="btn-sm ghost" onclick="toggleEmojiPicker('acc')">選 Emoji</button>
         </div>
         <div class="epicker hidden" id="emojiPickerAcc"></div>
       </div>
       <div style="margin-top:10px;display:flex;align-items:center;gap:10px">
-        <div id="newAccIconPreview" style="font-size:24px">🏦</div>
-        <span style="font-size:12px;color:var(--txl)" id="newAccIconLabel">未選擇銀行 icon</span>
+        <div id="newAccIconPreview" style="font-size:2.4rem">🏦</div>
+        <span style="font-size:1.2rem;color:var(--txl)" id="newAccIconLabel">未選擇銀行 icon</span>
       </div>
     </div>
     <button class="btn-main" onclick="addAccount()">新增帳戶</button>
@@ -671,18 +671,18 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
   <!-- 信用卡帳單對帳 -->
   <div class="card" id="creditBillingCard" style="display:none">
     <div class="card-ttl">💳 信用卡帳單對帳</div>
-    <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--txm);cursor:pointer;margin-bottom:12px">
+    <label style="display:flex;align-items:center;gap:6px;font-size:1.2rem;font-weight:600;color:var(--txm);cursor:pointer;margin-bottom:12px">
       <input type="checkbox" id="showPaidItems" onchange="renderCreditBilling()">
       顯示已還款記錄
     </label>
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
       <div style="display:flex;align-items:center;gap:6px;flex:1">
-        <span style="font-size:11px;font-weight:700;color:var(--txl)">從</span>
-        <input type="date" class="finp" id="billDateFrom" style="padding:8px 10px;font-size:13px">
+        <span style="font-size:1.1rem;font-weight:700;color:var(--txl)">從</span>
+        <input type="date" class="finp" id="billDateFrom" style="padding:8px 10px;font-size:1.3rem">
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex:1">
-        <span style="font-size:11px;font-weight:700;color:var(--txl)">到</span>
-        <input type="date" class="finp" id="billDateTo" style="padding:8px 10px;font-size:13px">
+        <span style="font-size:1.1rem;font-weight:700;color:var(--txl)">到</span>
+        <input type="date" class="finp" id="billDateTo" style="padding:8px 10px;font-size:1.3rem">
       </div>
       <button onclick="renderCreditBilling()" class="btn-sm" style="padding:8px 14px">套用</button>
     </div>
@@ -693,9 +693,9 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
   <div class="card">
     <div class="card-ttl">🧾 報帳本</div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
-      <div class="scard"><div class="scard-lbl">共墊出</div><div class="scard-val" style="font-size:14px;color:#B07800" id="accClmTotal">$0</div></div>
-      <div class="scard"><div class="scard-lbl">已回收</div><div class="scard-val" style="font-size:14px;color:#2A9A58" id="accClmRecovered">$0</div></div>
-      <div class="scard"><div class="scard-lbl">尚欠</div><div class="scard-val" style="font-size:14px;color:#D94040" id="accClmOwed">$0</div></div>
+      <div class="scard"><div class="scard-lbl">共墊出</div><div class="scard-val" style="font-size:1.4rem;color:#B07800" id="accClmTotal">$0</div></div>
+      <div class="scard"><div class="scard-lbl">已回收</div><div class="scard-val" style="font-size:1.4rem;color:#2A9A58" id="accClmRecovered">$0</div></div>
+      <div class="scard"><div class="scard-lbl">尚欠</div><div class="scard-val" style="font-size:1.4rem;color:#D94040" id="accClmOwed">$0</div></div>
     </div>
     <div id="accClaimList"></div>
   </div>
@@ -703,14 +703,14 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
   <!-- 封存本月 -->
   <div class="card">
     <div class="card-ttl">📦 封存本月</div>
-    <div style="font-size:12px;color:var(--txm);margin-bottom:12px;line-height:1.6">銀行帳單和信用卡都對完後，封存記錄本月餘額快照。</div>
+    <div style="font-size:1.2rem;color:var(--txm);margin-bottom:12px;line-height:1.6">銀行帳單和信用卡都對完後，封存記錄本月餘額快照。</div>
     <div class="fg">
       <label class="flbl">選擇月份</label>
       <input type="month" class="finp" id="sealMonthInpAcc">
     </div>
-    <div id="sealStatusAcc" style="font-size:13px;font-weight:600;margin-bottom:12px"></div>
+    <div id="sealStatusAcc" style="font-size:1.3rem;font-weight:600;margin-bottom:12px"></div>
     <button class="seal-btn" onclick="sealMonthAcc()">📦 封存</button>
-    <button onclick="unsealMonth()" style="width:100%;margin-top:8px;padding:12px;background:none;border:1.5px solid #D94040;border-radius:var(--rsm);font-family:inherit;font-size:14px;font-weight:600;color:#D94040;cursor:pointer;">🗑 刪除此月封存</button>
+    <button onclick="unsealMonth()" style="width:100%;margin-top:8px;padding:12px;background:none;border:1.5px solid #D94040;border-radius:var(--rsm);font-family:inherit;font-size:1.4rem;font-weight:600;color:#D94040;cursor:pointer;">🗑 刪除此月封存</button>
   </div>
 
 </div>
@@ -744,15 +744,15 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
   <div class="card">
     <div class="card-ttl">🔡 字體大小</div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <span style="font-size:13px;color:var(--txm)">子預算、交易等列表字體</span>
-      <span id="fontScaleLabel" style="font-size:14px;font-weight:800;color:var(--a2)">100%</span>
+      <span style="font-size:1.3rem;color:var(--txm)">子預算、交易等列表字體</span>
+      <span id="fontScaleLabel" style="font-size:1.4rem;font-weight:800;color:var(--a2)">100%</span>
     </div>
     <div style="display:flex;align-items:center;gap:10px">
-      <span style="font-size:12px;color:var(--txl);white-space:nowrap">小 A</span>
+      <span style="font-size:1.2rem;color:var(--txl);white-space:nowrap">小 A</span>
       <input type="range" id="fontScaleSlider" min="0.7" max="1.5" step="0.05" value="1"
         oninput="applyFontScale(parseFloat(this.value))"
         style="flex:1;accent-color:var(--a2);height:4px;cursor:pointer">
-      <span style="font-size:18px;color:var(--txl);white-space:nowrap">大 A</span>
+      <span style="font-size:1.8rem;color:var(--txl);white-space:nowrap">大 A</span>
     </div>
     <div style="display:flex;justify-content:center;gap:8px;margin-top:14px">
       <button onclick="applyFontScale(0.85)" style="padding:6px 14px;border-radius:99px;border:1.5px solid var(--bdrm);background:var(--bg);font-family:inherit;font-size:1.2rem;font-weight:700;color:var(--txm);cursor:pointer">小</button>
@@ -766,7 +766,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
   <!-- 收入類別管理 -->
   <div class="card">
     <div class="card-ttl">💰 收入類別</div>
-    <div style="font-size:11px;color:var(--txl);margin-bottom:10px">預設類別不可刪除，可新增自訂類別</div>
+    <div style="font-size:1.1rem;color:var(--txl);margin-bottom:10px">預設類別不可刪除，可新增自訂類別</div>
     <div id="incCatManage"></div>
     <hr class="divider">
     <div class="card-ttl">新增收入類別</div>
@@ -777,7 +777,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
     <div class="fg">
       <label class="flbl">Emoji</label>
       <div class="row">
-        <span id="newIncCatEmojiDisplay" style="font-size:24px">💰</span>
+        <span id="newIncCatEmojiDisplay" style="font-size:2.4rem">💰</span>
         <button class="btn-sm ghost" onclick="toggleEmojiPicker('incCat')">選 Emoji</button>
       </div>
       <div class="epicker hidden" id="emojiPickerIncCat"></div>
@@ -802,15 +802,15 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
     <div class="fg">
       <label class="flbl">Emoji</label>
       <div class="row">
-        <span id="newCatEmojiDisplay" style="font-size:24px">📦</span>
+        <span id="newCatEmojiDisplay" style="font-size:2.4rem">📦</span>
         <button class="btn-sm ghost" onclick="toggleEmojiPicker('cat')">選 Emoji</button>
       </div>
       <div class="epicker hidden" id="emojiPickerCat"></div>
     </div>
     <button class="btn-main" onclick="addCategory()">新增類別</button>
     <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--bdr);display:flex;justify-content:space-between;align-items:center">
-      <div style="font-size:11px;font-weight:700;color:var(--txl);text-transform:uppercase;letter-spacing:.08em">總預算（自動加總）</div>
-      <div style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--a2)" id="totalBudgetDisplay">$0</div>
+      <div style="font-size:1.1rem;font-weight:700;color:var(--txl);text-transform:uppercase;letter-spacing:.08em">總預算（自動加總）</div>
+      <div style="font-family:'DM Serif Display',serif;font-size:2.2rem;color:var(--a2)" id="totalBudgetDisplay">$0</div>
     </div>
   </div>
 
@@ -843,7 +843,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
     <div class="fg">
       <label class="flbl">Emoji</label>
       <div class="row">
-        <span id="newFxEmojiDisplay" style="font-size:24px">💳</span>
+        <span id="newFxEmojiDisplay" style="font-size:2.4rem">💳</span>
         <button class="btn-sm ghost" onclick="toggleEmojiPicker('fx')">選 Emoji</button>
       </div>
       <div class="epicker hidden" id="emojiPickerFx"></div>
@@ -856,16 +856,16 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
   <!-- 匯率設定 -->
   <div class="card">
     <div class="card-ttl">💱 匯率設定（對台幣）</div>
-    <div style="font-size:11px;color:var(--txl);margin-bottom:8px">1 外幣 = ? 台幣，可手動調整或一鍵更新即時匯率</div>
-    <button onclick="fetchLiveRates()" style="width:100%;padding:10px;background:none;border:1.5px solid var(--a1);border-radius:var(--rsm);font-family:inherit;font-size:13px;font-weight:700;color:var(--a2);cursor:pointer;margin-bottom:12px">🔄 更新即時匯率</button>
-    <div id="rateLastUpdate" style="font-size:11px;color:var(--txl);margin-bottom:10px"></div>
+    <div style="font-size:1.1rem;color:var(--txl);margin-bottom:8px">1 外幣 = ? 台幣，可手動調整或一鍵更新即時匯率</div>
+    <button onclick="fetchLiveRates()" style="width:100%;padding:10px;background:none;border:1.5px solid var(--a1);border-radius:var(--rsm);font-family:inherit;font-size:1.3rem;font-weight:700;color:var(--a2);cursor:pointer;margin-bottom:12px">🔄 更新即時匯率</button>
+    <div id="rateLastUpdate" style="font-size:1.1rem;color:var(--txl);margin-bottom:10px"></div>
     <div id="rateList"></div>
   </div>
 
   <!-- 自訂銀行 icon -->
   <div class="card">
     <div class="card-ttl">🏦 自訂銀行 Icon</div>
-    <div style="font-size:12px;color:var(--txm);margin-bottom:12px;line-height:1.6">
+    <div style="font-size:1.2rem;color:var(--txm);margin-bottom:12px;line-height:1.6">
       把圖片上傳到 GitHub 的 <b>icons/</b> 資料夾，再填入檔名即可。
     </div>
     <div id="customBankList"></div>
@@ -892,11 +892,11 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
     <div style="padding:12px 0;border-bottom:1px solid var(--bdr)">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
         <div>
-          <div style="font-size:14px;font-weight:700">🎤 語音記帳</div>
-          <div style="font-size:11px;color:var(--txl);margin-top:2px">免費，說出金額和類別自動填入</div>
+          <div style="font-size:1.4rem;font-weight:700">🎤 語音記帳</div>
+          <div style="font-size:1.1rem;color:var(--txl);margin-top:2px">免費，說出金額和類別自動填入</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
-          <span id="voiceStatus" style="font-size:11px;color:var(--txl)">未開啟</span>
+          <span id="voiceStatus" style="font-size:1.1rem;color:var(--txl)">未開啟</span>
           <div style="width:44px;height:24px;background:#CCC;border-radius:99px;position:relative;cursor:pointer;transition:background .2s" id="voiceToggle" onclick="toggleVoice()">
             <div style="position:absolute;top:2px;left:2px;width:20px;height:20px;background:white;border-radius:50%;transition:left .2s" id="voiceKnob"></div>
           </div>
@@ -908,27 +908,27 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
     <div style="padding:12px 0">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
         <div>
-          <div style="font-size:14px;font-weight:700">📸 截圖記帳</div>
-          <div style="font-size:11px;color:var(--txl);margin-top:2px">上傳收據自動辨識金額（需要 API Key）</div>
+          <div style="font-size:1.4rem;font-weight:700">📸 截圖記帳</div>
+          <div style="font-size:1.1rem;color:var(--txl);margin-top:2px">上傳收據自動辨識金額（需要 API Key）</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
-          <span id="ocrStatus" style="font-size:11px;color:var(--txl)">未開啟</span>
+          <span id="ocrStatus" style="font-size:1.1rem;color:var(--txl)">未開啟</span>
           <div style="width:44px;height:24px;background:#CCC;border-radius:99px;position:relative;cursor:pointer;transition:background .2s" id="ocrToggle" onclick="toggleOCR()">
             <div style="position:absolute;top:2px;left:2px;width:20px;height:20px;background:white;border-radius:50%;transition:left .2s" id="ocrKnob"></div>
           </div>
         </div>
       </div>
       <div id="ocrKeySection" style="display:none">
-        <div style="font-size:11px;color:var(--txl);margin-bottom:6px;line-height:1.5">
+        <div style="font-size:1.1rem;color:var(--txl);margin-bottom:6px;line-height:1.5">
           🔑 Google Gemini API Key（免費，儲存在本機）<br>
           申請：<a href="https://aistudio.google.com" target="_blank" style="color:var(--a1)">aistudio.google.com</a> → Get API Key
         </div>
         <div style="display:flex;gap:8px">
-          <input type="password" class="finp" id="apiKeyInp" placeholder="AIza..." style="font-size:13px;padding:10px 12px">
+          <input type="password" class="finp" id="apiKeyInp" placeholder="AIza..." style="font-size:1.3rem;padding:10px 12px">
           <button class="btn-sm" onclick="saveApiKey()">儲存</button>
         </div>
-        <div id="apiKeyStatus" style="font-size:11px;margin-top:6px;color:var(--txl)"></div>
-        <button onclick="testGeminiKey()" style="margin-top:8px;padding:8px 16px;background:none;border:1.5px solid var(--a1);border-radius:var(--rxs);font-family:inherit;font-size:12px;font-weight:700;color:var(--a2);cursor:pointer">🧪 測試 API Key</button>
+        <div id="apiKeyStatus" style="font-size:1.1rem;margin-top:6px;color:var(--txl)"></div>
+        <button onclick="testGeminiKey()" style="margin-top:8px;padding:8px 16px;background:none;border:1.5px solid var(--a1);border-radius:var(--rxs);font-family:inherit;font-size:1.2rem;font-weight:700;color:var(--a2);cursor:pointer">🧪 測試 API Key</button>
       </div>
     </div>
   </div>
@@ -974,7 +974,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
   <!-- 匯出 -->
   <div class="card">
     <div class="card-ttl">📤 匯出 Excel</div>
-    <div style="font-size:12px;color:var(--txm);margin-bottom:12px">匯出含四個分頁的 Excel：每月摘要、流水帳、資產負債表、固定扣款</div>
+    <div style="font-size:1.2rem;color:var(--txm);margin-bottom:12px">匯出含四個分頁的 Excel：每月摘要、流水帳、資產負債表、固定扣款</div>
     <button class="export-btn" onclick="exportExcel()">⬇ 下載 Excel</button>
   </div>
 </div>
@@ -984,11 +984,11 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
   <div class="modal-box">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
       <div class="modal-title" style="margin-bottom:0" id="accDetailTitle">帳戶明細</div>
-      <button onclick="closeAccDetail()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--txl)">✕</button>
+      <button onclick="closeAccDetail()" style="background:none;border:none;font-size:2.0rem;cursor:pointer;color:var(--txl)">✕</button>
     </div>
     <!-- 起始餘額 -->
     <div style="background:var(--pale);border-radius:var(--rsm);padding:12px;margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;font-size:13px">
+      <div style="display:flex;justify-content:space-between;font-size:1.3rem">
         <span style="color:var(--txm);font-weight:600">起始餘額</span>
         <span style="font-weight:700" id="accDetailInitBal">$0</span>
       </div>
@@ -997,8 +997,8 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
     <div id="accDetailList"></div>
     <!-- 總計 -->
     <div style="background:var(--pale);border-radius:var(--rsm);padding:12px;margin-top:12px;display:flex;justify-content:space-between;align-items:center">
-      <span style="font-size:13px;font-weight:700;color:var(--txm)">現在餘額</span>
-      <span style="font-family:'DM Serif Display',serif;font-size:20px;font-weight:700" id="accDetailTotal">$0</span>
+      <span style="font-size:1.3rem;font-weight:700;color:var(--txm)">現在餘額</span>
+      <span style="font-family:'DM Serif Display',serif;font-size:2.0rem;font-weight:700" id="accDetailTotal">$0</span>
     </div>
   </div>
 </div>
@@ -1006,14 +1006,14 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
 <!-- Pay bill modal -->
 <div id="payBillModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:200;align-items:center;justify-content:center;">
   <div style="background:var(--surf);border-radius:var(--r);padding:24px;margin:0 20px;width:calc(100% - 40px);max-width:420px">
-    <div style="font-size:17px;font-weight:700;margin-bottom:4px">💳 信用卡還款</div>
-    <div style="font-size:12px;color:var(--txl);margin-bottom:16px" id="payBillCardName"></div>
+    <div style="font-size:1.7rem;font-weight:700;margin-bottom:4px">💳 信用卡還款</div>
+    <div style="font-size:1.2rem;color:var(--txl);margin-bottom:16px" id="payBillCardName"></div>
     <div style="background:var(--pale);border-radius:var(--rsm);padding:14px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">
       <div>
-        <div style="font-size:12px;color:var(--txm);font-weight:600">本期應還（已勾選）</div>
-        <div style="font-size:11px;color:var(--txl);margin-top:2px" id="payBillUnchecked"></div>
+        <div style="font-size:1.2rem;color:var(--txm);font-weight:600">本期應還（已勾選）</div>
+        <div style="font-size:1.1rem;color:var(--txl);margin-top:2px" id="payBillUnchecked"></div>
       </div>
-      <div style="font-family:'DM Serif Display',serif;font-size:24px;color:var(--a2)" id="payBillAmtDisplay"></div>
+      <div style="font-family:'DM Serif Display',serif;font-size:2.4rem;color:var(--a2)" id="payBillAmtDisplay"></div>
     </div>
     <div class="fg">
       <label class="flbl">還款金額</label>
@@ -1037,7 +1037,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
 <!-- Edit payment modal -->
 <div id="editPaymentModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:200;align-items:center;justify-content:center;">
   <div style="background:var(--surf);border-radius:var(--r);padding:24px;margin:0 20px;width:calc(100% - 40px);max-width:420px">
-    <div style="font-size:17px;font-weight:700;margin-bottom:16px">✏️ 編輯還款記錄</div>
+    <div style="font-size:1.7rem;font-weight:700;margin-bottom:16px">✏️ 編輯還款記錄</div>
     <div class="fg">
       <label class="flbl">還款金額</label>
       <input type="number" class="finp" id="editPayAmt" placeholder="0" inputmode="decimal">
@@ -1064,7 +1064,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
 <!-- Edit fixed expense modal -->
 <div id="editFixedModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:200;align-items:center;justify-content:center;">
   <div style="background:var(--surf);border-radius:var(--r);padding:24px;margin:0 20px;width:calc(100% - 40px);max-width:420px;max-height:85vh;overflow-y:auto">
-    <div style="font-size:17px;font-weight:700;margin-bottom:16px">✏️ 編輯固定扣款</div>
+    <div style="font-size:1.7rem;font-weight:700;margin-bottom:16px">✏️ 編輯固定扣款</div>
     <div class="fg">
       <label class="flbl">名稱</label>
       <input type="text" class="finp" id="editFxName" placeholder="名稱">
@@ -1119,14 +1119,14 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
       <label class="flbl">銀行 Icon</label>
       <div class="icon-grid" id="editBankIconGrid"></div>
       <div style="margin-top:8px;display:flex;align-items:center;gap:8px">
-        <div id="editAccIconPreview" style="font-size:24px">🏦</div>
-        <button class="btn-sm ghost" onclick="clearEditBankIcon()" style="font-size:11px;padding:4px 8px">清除 icon，改用 Emoji</button>
+        <div id="editAccIconPreview" style="font-size:2.4rem">🏦</div>
+        <button class="btn-sm ghost" onclick="clearEditBankIcon()" style="font-size:1.1rem;padding:4px 8px">清除 icon，改用 Emoji</button>
       </div>
     </div>
     <div class="fg" id="editAccEmojiSection">
       <label class="flbl">Emoji（未選銀行 icon 時使用）</label>
       <div class="row">
-        <span id="editAccEmojiDisplay" style="font-size:24px">🏦</span>
+        <span id="editAccEmojiDisplay" style="font-size:2.4rem">🏦</span>
         <button class="btn-sm ghost" onclick="toggleEmojiPicker('editAcc')">選 Emoji</button>
       </div>
       <div class="epicker hidden" id="emojiPickerEditAcc"></div>
@@ -1176,7 +1176,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
 <!-- Rename category modal -->
 <div id="renameCatModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:200;align-items:center;justify-content:center;">
   <div style="background:var(--surf);border-radius:var(--r);padding:24px;margin:0 20px;width:calc(100% - 40px);max-width:400px">
-    <div style="font-size:15px;font-weight:700;margin-bottom:16px">修改類別</div>
+    <div style="font-size:1.5rem;font-weight:700;margin-bottom:16px">修改類別</div>
     <div class="fg">
       <label class="flbl">類別名稱</label>
       <input type="text" class="finp" id="renameCatInp" placeholder="新名稱">
@@ -1188,7 +1188,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
     <div class="fg">
       <label class="flbl">Emoji</label>
       <div class="row">
-        <span id="renameCatEmojiDisplay" style="font-size:24px">📦</span>
+        <span id="renameCatEmojiDisplay" style="font-size:2.4rem">📦</span>
         <button class="btn-sm ghost" onclick="toggleEmojiPicker('renameCat')">選 Emoji</button>
       </div>
       <div class="epicker hidden" id="emojiPickerRenameCat"></div>
@@ -1203,9 +1203,9 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
 <!-- Edit initBal modal -->
 <div id="initBalModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:200;align-items:center;justify-content:center;">
   <div style="background:var(--surf);border-radius:var(--r);padding:24px;margin:0 20px;width:calc(100% - 40px);max-width:400px">
-    <div style="font-size:15px;font-weight:700;margin-bottom:4px">設定起始餘額</div>
-    <div style="font-size:12px;color:var(--txl);margin-bottom:16px;line-height:1.6" id="initBalAccName"></div>
-    <div style="background:var(--pale);border-radius:var(--rsm);padding:12px;margin-bottom:16px;font-size:12px;color:var(--txm);line-height:1.6">
+    <div style="font-size:1.5rem;font-weight:700;margin-bottom:4px">設定起始餘額</div>
+    <div style="font-size:1.2rem;color:var(--txl);margin-bottom:16px;line-height:1.6" id="initBalAccName"></div>
+    <div style="background:var(--pale);border-radius:var(--rsm);padding:12px;margin-bottom:16px;font-size:1.2rem;color:var(--txm);line-height:1.6">
       💡 起始餘額是你開始使用帳本前這個帳戶的實際金額。之後的收支會在這個基礎上加減。
     </div>
     <div class="fg">
@@ -1222,8 +1222,8 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
 <!-- Settle modal -->
 <div id="settleModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:200;align-items:center;justify-content:center;">
   <div style="background:var(--surf);border-radius:var(--r);padding:24px;margin:0 20px;width:calc(100% - 40px);max-width:400px">
-    <div style="font-size:15px;font-weight:700;margin-bottom:4px">沖銷回款</div>
-    <div style="font-size:12px;color:var(--txl);margin-bottom:16px" id="settleClaimName"></div>
+    <div style="font-size:1.5rem;font-weight:700;margin-bottom:4px">沖銷回款</div>
+    <div style="font-size:1.2rem;color:var(--txl);margin-bottom:16px" id="settleClaimName"></div>
     <div class="fg">
       <label class="flbl">回款入帳帳戶</label>
       <select class="finp" id="settleAcc"></select>
@@ -1493,11 +1493,11 @@ const ICONS_BASE = 'https://bace0621.github.io/cat-ledger/icons/';
 function bankIconUrl(file) { return ICONS_BASE + file; }
 function getAccIcon(a) {
   if (a.bankIcon) return `<img class="bank-icon" src="${bankIconUrl(a.bankIcon)}" alt="${a.name}">`;
-  return `<span style="font-size:18px">${a.emoji||'🏦'}</span>`;
+  return `<span style="font-size:1.8rem">${a.emoji||'🏦'}</span>`;
 }
 function getAccIconLarge(a) {
   if (a.bankIcon) return `<img class="bank-icon-sel" src="${bankIconUrl(a.bankIcon)}" alt="${a.name}">`;
-  return `<span style="font-size:24px">${a.emoji||'🏦'}</span>`;
+  return `<span style="font-size:2.4rem">${a.emoji||'🏦'}</span>`;
 }
 
 const EMOJIS = [
@@ -2010,7 +2010,7 @@ function renderHome() {
               <div class="tx-meta">${fmtDk(tx.dk)} · ${fa?.name||tx.fromName||'未知'} → ${ta?.name||tx.toName||'未知'}</div>
             </div>
             <div class="tx-amt trf">${fmt(tx.amt)}</div>
-            <button class="tx-del" onclick="${isCCPay?'openEditPayment':'openEditTx'}('${tx.id}')" style="opacity:0.4;font-size:13px" title="編輯">✏️</button>
+            <button class="tx-del" onclick="${isCCPay?'openEditPayment':'openEditTx'}('${tx.id}')" style="opacity:0.4;font-size:1.3rem" title="編輯">✏️</button>
             <button class="tx-del" onclick="deleteTx('${tx.id}')">✕</button>
           </div>`;
         }
@@ -2024,7 +2024,7 @@ function renderHome() {
               <div class="tx-meta">${fmtDk(tx.dk)} · ${acc2?.name||'未知帳戶'} <span class="tag" style="background:#FFF8E0;color:#A07000">${isSettle?'回款沖銷':'報帳墊款'}</span></div>
             </div>
             <div class="tx-amt clm">${isSettle?'+':'−'}${fmt(tx.amt)}</div>
-            <button class="tx-del" onclick="openEditTx('${tx.id}')" style="opacity:0.4;font-size:13px" title="編輯">✏️</button>
+            <button class="tx-del" onclick="openEditTx('${tx.id}')" style="opacity:0.4;font-size:1.3rem" title="編輯">✏️</button>
           <button class="tx-del" onclick="deleteTx('${tx.id}')">✕</button>
           </div>`;
         }
@@ -2035,10 +2035,10 @@ function renderHome() {
           <div class="tx-ico ${tx.type}">${cat.emoji}</div>
           <div class="tx-info">
             <div class="tx-name">${tx.note||cat.name}</div>
-            <div class="tx-meta">${fmtDk(tx.dk)} · ${acc?.name||tx.accName||'未知帳戶'} <span class="tag ${tx.type}">${tx.type==='inc'?'收入':'支出'}</span>${tx.historical?` <span style="font-size:10px;background:#EEF0F8;color:#6070B0;padding:2px 5px;border-radius:99px;font-weight:700">補登</span>`:''}</div>
+            <div class="tx-meta">${fmtDk(tx.dk)} · ${acc?.name||tx.accName||'未知帳戶'} <span class="tag ${tx.type}">${tx.type==='inc'?'收入':'支出'}</span>${tx.historical?` <span style="font-size:1.0rem;background:#EEF0F8;color:#6070B0;padding:2px 5px;border-radius:99px;font-weight:700">補登</span>`:''}</div>
           </div>
           <div class="tx-amt ${tx.type}">${tx.type==='inc'?'+':'−'}${fmt(tx.amt)}</div>
-          <button class="tx-del" onclick="openEditTx('${tx.id}')" style="opacity:0.4;font-size:13px" title="編輯">✏️</button>
+          <button class="tx-del" onclick="openEditTx('${tx.id}')" style="opacity:0.4;font-size:1.3rem" title="編輯">✏️</button>
           <button class="tx-del" onclick="deleteTx('${tx.id}')">✕</button>
         </div>`;
     }).join('');
@@ -2073,7 +2073,7 @@ function renderAccounts() {
           </div>
           <div style="flex-shrink:0">
             <div class="claim-amt">${fmt(clm.amt)}</div>
-            ${isPending?`<button class="btn-sm" onclick="openSettle('${clm.id}')" style="font-size:11px;padding:4px 8px;margin-top:4px">沖銷</button>`:''}
+            ${isPending?`<button class="btn-sm" onclick="openSettle('${clm.id}')" style="font-size:1.1rem;padding:4px 8px;margin-top:4px">沖銷</button>`:''}
           </div>
         </div>`;
       }).join('');
@@ -2089,9 +2089,9 @@ function renderAccounts() {
   });
   document.getElementById('accSummary').innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:4px">
-      <div class="scard"><div class="scard-lbl">總資產</div><div class="scard-val" style="font-size:16px;color:var(--a2)">${fmt(totalAsset)}</div></div>
-      <div class="scard"><div class="scard-lbl">負債</div><div class="scard-val" style="font-size:16px;color:#D94040">${fmt(totalLiab)}</div></div>
-      <div class="scard"><div class="scard-lbl">淨資產</div><div class="scard-val" style="font-size:16px;color:#2A9A58">${fmt(totalAsset-totalLiab)}</div></div>
+      <div class="scard"><div class="scard-lbl">總資產</div><div class="scard-val" style="font-size:1.6rem;color:var(--a2)">${fmt(totalAsset)}</div></div>
+      <div class="scard"><div class="scard-lbl">負債</div><div class="scard-val" style="font-size:1.6rem;color:#D94040">${fmt(totalLiab)}</div></div>
+      <div class="scard"><div class="scard-lbl">淨資產</div><div class="scard-val" style="font-size:1.6rem;color:#2A9A58">${fmt(totalAsset-totalLiab)}</div></div>
     </div>`;
 
   // Account list
@@ -2103,24 +2103,24 @@ function renderAccounts() {
   document.getElementById('accList').innerHTML = sortedAccs.map(a=>{
     const bal = getAccBal(a.id);
     const isNeg = bal<0;
-    const sep = lastType2 !== a.type ? `<div style="font-size:10px;font-weight:700;color:var(--txl);text-transform:uppercase;letter-spacing:.06em;padding:10px 0 4px;margin-top:${lastType2?'4px':'0'};border-top:${lastType2?'1px solid var(--bdr)':'none'}">${typeLabel2[a.type]||a.type}</div>` : '';
+    const sep = lastType2 !== a.type ? `<div style="font-size:1.0rem;font-weight:700;color:var(--txl);text-transform:uppercase;letter-spacing:.06em;padding:10px 0 4px;margin-top:${lastType2?'4px':'0'};border-top:${lastType2?'1px solid var(--bdr)':'none'}">${typeLabel2[a.type]||a.type}</div>` : '';
     lastType2 = a.type;
     return sep + `<div class="acc-row">
-      <div class="acc-row-ico" style="background:none;padding:0">${a.bankIcon ? `<img class="bank-icon" src="${bankIconUrl(a.bankIcon)}" alt="${a.name}">` : `<span style="font-size:18px;width:34px;height:34px;background:var(--pale);border-radius:8px;display:flex;align-items:center;justify-content:center">${a.emoji}</span>`}</div>
+      <div class="acc-row-ico" style="background:none;padding:0">${a.bankIcon ? `<img class="bank-icon" src="${bankIconUrl(a.bankIcon)}" alt="${a.name}">` : `<span style="font-size:1.8rem;width:34px;height:34px;background:var(--pale);border-radius:8px;display:flex;align-items:center;justify-content:center">${a.emoji}</span>`}</div>
       <div class="acc-row-info">
-        <div class="acc-row-name">${a.name}${a.archived?` <span style="font-size:10px;background:#F0EDEA;color:#A09080;padding:2px 6px;border-radius:99px;font-weight:700">封存</span>`:''}</div>
+        <div class="acc-row-name">${a.name}${a.archived?` <span style="font-size:1.0rem;background:#F0EDEA;color:#A09080;padding:2px 6px;border-radius:99px;font-weight:700">封存</span>`:''}</div>
         <div class="acc-row-type">${typeLabel[a.type]||a.type}${a.loanData?` · ${a.loanData.rate}% · ${a.loanData.years}年`:''}</div>
-        ${a.loanData?(()=>{ const s=getLoanThisMonth(a); return s?`<div style="font-size:11px;color:var(--txl);margin-top:2px">本月本金 <b style="color:var(--a2)">$${s.principal.toLocaleString()}</b> ／ 利息 <b style="color:#D94040">$${s.interest.toLocaleString()}</b></div>`:''; })():''}
+        ${a.loanData?(()=>{ const s=getLoanThisMonth(a); return s?`<div style="font-size:1.1rem;color:var(--txl);margin-top:2px">本月本金 <b style="color:var(--a2)">$${s.principal.toLocaleString()}</b> ／ 利息 <b style="color:#D94040">$${s.interest.toLocaleString()}</b></div>`:''; })():''}
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
         <div class="acc-row-bal" style="color:${isNeg?'#D94040':'var(--a2)'}">
           ${isNeg?'-':'+'}${fmtFx(bal, a.currency)}
-          ${a.currency&&a.currency!=='TWD'?`<div style="font-size:10px;color:var(--txl);font-weight:500">≈ ${fmt(toTWD(bal,a.currency))} TWD</div>`:''}
+          ${a.currency&&a.currency!=='TWD'?`<div style="font-size:1.0rem;color:var(--txl);font-weight:500">≈ ${fmt(toTWD(bal,a.currency))} TWD</div>`:''}
         </div>
         <div style="display:flex;gap:4px">
-          <button class="btn-sm ghost" onclick="openAccDetail('${a.id}')" style="font-size:11px;padding:4px 8px">📋</button>
-          <button class="btn-sm ghost" onclick="openEditAccount('${a.id}')" style="font-size:11px;padding:4px 8px">✏️</button>
-          <button class="btn-sm ghost" onclick="archiveAccount('${a.id}')" style="font-size:11px;padding:4px 8px">${a.archived?'取消封存':'封存'}</button>
+          <button class="btn-sm ghost" onclick="openAccDetail('${a.id}')" style="font-size:1.1rem;padding:4px 8px">📋</button>
+          <button class="btn-sm ghost" onclick="openEditAccount('${a.id}')" style="font-size:1.1rem;padding:4px 8px">✏️</button>
+          <button class="btn-sm ghost" onclick="archiveAccount('${a.id}')" style="font-size:1.1rem;padding:4px 8px">${a.archived?'取消封存':'封存'}</button>
         </div>
       </div>
     </div>`;
@@ -2265,14 +2265,14 @@ function renderSettings() {
   // Cat manage
   document.getElementById('catManage').innerHTML = D.cats.map(c=>`
     <div class="bset-row" style="opacity:${c.archived?0.5:1}">
-      <span style="font-size:18px">${c.emoji}</span>
+      <span style="font-size:1.8rem">${c.emoji}</span>
       <div style="flex:1">
-        <div style="font-size:13px;font-weight:600">${c.name}${c.archived?` <span style="font-size:10px;background:#F0EDEA;color:#A09080;padding:2px 6px;border-radius:99px;font-weight:700">封存</span>`:''}</div>
+        <div style="font-size:1.3rem;font-weight:600">${c.name}${c.archived?` <span style="font-size:1.0rem;background:#F0EDEA;color:#A09080;padding:2px 6px;border-radius:99px;font-weight:700">封存</span>`:''}</div>
       </div>
       ${!c.archived?`<input type="number" class="binp" value="${c.budget||0}" placeholder="預算" title="子預算" onchange="updateBudget('${c.id}',this.value)" style="width:80px">`:''}
       <div style="display:flex;gap:4px">
-        ${!c.archived?`<button class="btn-sm ghost" onclick="openRenameCat('${c.id}')" style="font-size:11px;padding:4px 8px">✏️</button>`:''}
-        <button class="btn-sm ghost" onclick="archiveCat('${c.id}')" style="font-size:11px;padding:4px 8px">${c.archived?'取消封存':'封存'}</button>
+        ${!c.archived?`<button class="btn-sm ghost" onclick="openRenameCat('${c.id}')" style="font-size:1.1rem;padding:4px 8px">✏️</button>`:''}
+        <button class="btn-sm ghost" onclick="archiveCat('${c.id}')" style="font-size:1.1rem;padding:4px 8px">${c.archived?'取消封存':'封存'}</button>
       </div>
     </div>`).join('');
   document.getElementById('totalBudgetDisplay').textContent = fmt(calcBudget());
@@ -2360,8 +2360,8 @@ function renderFixedExpList() {
             <div class="acc-row-type">${acc?acc.name:'未知帳戶'} · 每月${fx.day||1}號 · ${fmt(fx.amt)}</div>
           </div>
           <div style="display:flex;gap:4px">
-            <button class="btn-sm ghost" onclick="openEditFixed('${fx.id}')" style="font-size:11px;padding:5px 9px">✏️ 編輯</button>
-            <button class="btn-sm danger" onclick="deleteFixedExp('${fx.id}')" style="font-size:11px;padding:5px 9px">刪除</button>
+            <button class="btn-sm ghost" onclick="openEditFixed('${fx.id}')" style="font-size:1.1rem;padding:5px 9px">✏️ 編輯</button>
+            <button class="btn-sm danger" onclick="deleteFixedExp('${fx.id}')" style="font-size:1.1rem;padding:5px 9px">刪除</button>
           </div>
         </div>`;
       }).join('');
@@ -2512,7 +2512,7 @@ function renderClaimList() {
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
         <div class="claim-amt">${fmt(clm.amt)}</div>
-        ${isPending?`<button class="btn-sm" onclick="openSettle('${clm.id}')" style="font-size:11px;padding:5px 10px">沖銷</button>`:''}
+        ${isPending?`<button class="btn-sm" onclick="openSettle('${clm.id}')" style="font-size:1.1rem;padding:5px 10px">沖銷</button>`:''}
       </div>
     </div>`;
   }).join('');
@@ -2531,13 +2531,13 @@ function renderReport() {
     const accNames = accIds.map(id=>{ const a=D.accounts.find(x=>x.id===id); return a?a.emoji+a.name:id; });
     document.getElementById('snapshotTable').innerHTML = `
       <div style="overflow-x:auto">
-        <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <table style="width:100%;border-collapse:collapse;font-size:1.2rem">
           <thead>
             <tr style="border-bottom:2px solid var(--bdrm)">
-              <th style="text-align:left;padding:6px 4px;color:var(--txl);font-size:11px">月份</th>
-              <th style="text-align:right;padding:6px 4px;color:var(--txl);font-size:11px">總資產</th>
-              <th style="text-align:right;padding:6px 4px;color:var(--txl);font-size:11px">負債</th>
-              <th style="text-align:right;padding:6px 4px;color:var(--txl);font-size:11px">淨資產</th>
+              <th style="text-align:left;padding:6px 4px;color:var(--txl);font-size:1.1rem">月份</th>
+              <th style="text-align:right;padding:6px 4px;color:var(--txl);font-size:1.1rem">總資產</th>
+              <th style="text-align:right;padding:6px 4px;color:var(--txl);font-size:1.1rem">負債</th>
+              <th style="text-align:right;padding:6px 4px;color:var(--txl);font-size:1.1rem">淨資產</th>
             </tr>
           </thead>
           <tbody>
@@ -2880,8 +2880,8 @@ function renderCreditBilling() {
         const cat = allCats.find(c=>c.id===tx.cat)||{emoji:'📦',name:tx.cat};
         const isClm = tx.type==='clm';
         const isPaid = !!tx.paidAt;
-        const clmTag = isClm ? ' <span style="font-size:10px;background:#FFF8E0;color:#A07000;padding:1px 6px;border-radius:99px;font-weight:700">墊款</span>' : '';
-        const paidTag = isPaid ? ' <span style="font-size:10px;background:#E0F5E8;color:#1A7A40;padding:1px 6px;border-radius:99px;font-weight:700">已還款</span>' : '';
+        const clmTag = isClm ? ' <span style="font-size:1.0rem;background:#FFF8E0;color:#A07000;padding:1px 6px;border-radius:99px;font-weight:700">墊款</span>' : '';
+        const paidTag = isPaid ? ' <span style="font-size:1.0rem;background:#E0F5E8;color:#1A7A40;padding:1px 6px;border-radius:99px;font-weight:700">已還款</span>' : '';
         const paidDate = isPaid ? ' · 還款日 '+tx.paidAt : '';
         const chkCls = (isPaid||tx.billed) ? 'checked' : '';
         return `<div class="bill-item" style="opacity:${isPaid?0.45:1}">
@@ -2902,7 +2902,7 @@ function renderCreditBilling() {
     <div class="bill-summary">
       <div>
         <div class="bill-summary-label">✅ 本期已勾選</div>
-        <div style="font-size:11px;color:var(--txl);margin-top:2px">⬜ 未勾選 ${fmt(uncheckedTotal)}</div>
+        <div style="font-size:1.1rem;color:var(--txl);margin-top:2px">⬜ 未勾選 ${fmt(uncheckedTotal)}</div>
       </div>
       <div class="bill-summary-amt">${fmt(checkedTotal)}</div>
     </div>
@@ -3359,8 +3359,8 @@ function toggleSubDetail(catId) {
       t.type==='exp' && t.cat===catId && !t.historical
     ).sort((a,b)=>b.ts-a.ts);
     el.innerHTML = txs.length===0
-      ? '<div style="font-size:12px;color:var(--txl)">尚無消費</div>'
-      : txs.map(t=>`<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0">
+      ? '<div style="font-size:1.2rem;color:var(--txl)">尚無消費</div>'
+      : txs.map(t=>`<div style="display:flex;justify-content:space-between;font-size:1.2rem;padding:3px 0">
           <span style="color:var(--txm)">${fmtDk(t.dk)} ${t.note||''}</span>
           <span style="font-weight:700;color:var(--a2)">-${fmt(t.amt)}</span>
         </div>`).join('');
@@ -3403,7 +3403,7 @@ function renderHomePie() {
   if (!canvas) return;
   destroyChart('homePie');
   if (totalExp===0 && totalInc===0) {
-    canvas.parentElement.innerHTML = '<div style="height:180px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--txl)">本月尚無記錄</div>';
+    canvas.parentElement.innerHTML = '<div style="height:180px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:var(--txl)">本月尚無記錄</div>';
     const totalsEl = document.getElementById('homePieTotals');
     if (totalsEl) totalsEl.style.display = 'none';
     return;
@@ -3417,7 +3417,7 @@ function renderHomePie() {
   const incColors = ['#2A9A58','#4EB87A','#1A7040','#80C898','#60A878','#38B870'];
   const pieColors = homePieTab === 'exp' ? expColors : incColors;
   if (!entries.length) {
-    canvas.parentElement.innerHTML = `<div style="height:180px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--txl)">本月尚無${homePieTab==='exp'?'支出':'收入'}記錄</div>`;
+    canvas.parentElement.innerHTML = `<div style="height:180px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:var(--txl)">本月尚無${homePieTab==='exp'?'支出':'收入'}記錄</div>`;
   } else {
     chartInsts['homePie'] = new Chart(canvas, {
       type:'doughnut',
@@ -3440,18 +3440,18 @@ function renderHomePie() {
     totalsEl.style.display = 'flex';
     totalsEl.innerHTML =
       `<div style="text-align:center">
-        <div style="font-size:10px;font-weight:700;color:var(--txl);letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px">本月支出</div>
-        <div style="font-family:'DM Serif Display',serif;font-size:18px;color:var(--a2)">${fmt(totalExp)}</div>
+        <div style="font-size:1.0rem;font-weight:700;color:var(--txl);letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px">本月支出</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:1.8rem;color:var(--a2)">${fmt(totalExp)}</div>
       </div>
       <div style="width:1px;background:var(--bdr);margin:0 4px"></div>
       <div style="text-align:center">
-        <div style="font-size:10px;font-weight:700;color:var(--txl);letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px">本月收入</div>
-        <div style="font-family:'DM Serif Display',serif;font-size:18px;color:#1A8840">${fmt(totalInc)}</div>
+        <div style="font-size:1.0rem;font-weight:700;color:var(--txl);letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px">本月收入</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:1.8rem;color:#1A8840">${fmt(totalInc)}</div>
       </div>
       <div style="width:1px;background:var(--bdr);margin:0 4px"></div>
       <div style="text-align:center">
-        <div style="font-size:10px;font-weight:700;color:var(--txl);letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px">結餘</div>
-        <div style="font-family:'DM Serif Display',serif;font-size:18px;color:${totalInc-totalExp>=0?'#1A8840':'#CC2020'}">${fmt(totalInc-totalExp)}</div>
+        <div style="font-size:1.0rem;font-weight:700;color:var(--txl);letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px">結餘</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:1.8rem;color:${totalInc-totalExp>=0?'#1A8840':'#CC2020'}">${fmt(totalInc-totalExp)}</div>
       </div>`;
   }
 }
@@ -3540,9 +3540,9 @@ function calSelectDay(dk) {
 function showCalDetail(dk, info) {
   const detail=document.getElementById('calDetail');
   detail.style.display='block';
-  if(!info||!info.txs.length){detail.innerHTML=`<div style="font-size:12px;color:var(--txl);text-align:center">${dk} 沒有記錄</div>`;return;}
+  if(!info||!info.txs.length){detail.innerHTML=`<div style="font-size:1.2rem;color:var(--txl);text-align:center">${dk} 沒有記錄</div>`;return;}
   const allCats=[...D.cats,...getIncCats()];
-  detail.innerHTML=`<div style="font-size:11px;font-weight:700;color:var(--txl);margin-bottom:8px">${dk}</div>`+
+  detail.innerHTML=`<div style="font-size:1.1rem;font-weight:700;color:var(--txl);margin-bottom:8px">${dk}</div>`+
     info.txs.sort((a,b)=>b.ts-a.ts).map(tx=>{
       const cat=allCats.find(c=>c.id===tx.cat)||{emoji:'📦',name:''};
       const acc=D.accounts.find(a=>a.id===tx.acc);
@@ -3551,7 +3551,7 @@ function showCalDetail(dk, info) {
         <div class="tx-info"><div class="tx-name">${tx.note||cat.name}</div>
         <div class="tx-meta">${acc?.name||tx.accName||'未知帳戶'}</div></div>
         <div class="tx-amt ${tx.type}">${tx.type==='inc'?'+':'−'}${fmt(tx.amt)}</div>
-        <button class="tx-del" onclick="openEditTx('${tx.id}')" style="opacity:0.4;font-size:13px">✏️</button>
+        <button class="tx-del" onclick="openEditTx('${tx.id}')" style="opacity:0.4;font-size:1.3rem">✏️</button>
         <button class="tx-del" onclick="deleteTx('${tx.id}');renderCal()">✕</button>
       </div>`;
     }).join('');
@@ -3563,7 +3563,7 @@ function renderCustomBankList() {
   if (!el) return;
   const custom = (D.customBanks||[]);
   if (!custom.length) {
-    el.innerHTML = '<div style="font-size:12px;color:var(--txl);margin-bottom:8px">尚未新增自訂 icon</div>';
+    el.innerHTML = '<div style="font-size:1.2rem;color:var(--txl);margin-bottom:8px">尚未新增自訂 icon</div>';
     return;
   }
   el.innerHTML = custom.map(b=>`
@@ -3573,7 +3573,7 @@ function renderCustomBankList() {
         <div class="acc-row-name">${b.name}</div>
         <div class="acc-row-type">${b.file}</div>
       </div>
-      <button class="btn-sm danger" onclick="deleteCustomBank('${b.id}')" style="font-size:11px;padding:5px 9px">刪除</button>
+      <button class="btn-sm danger" onclick="deleteCustomBank('${b.id}')" style="font-size:1.1rem;padding:5px 9px">刪除</button>
     </div>`).join('');
 }
 
@@ -3634,14 +3634,14 @@ function openAccDetail(accId) {
         else if (tx.type==='clm') { amt=-tx.amt; label='墊款'; color='#B07800'; }
         else if (tx.type==='settle') { amt=tx.amt; label='回款'; color='#2A9A58'; }
         const cat = allCats.find(c=>c.id===tx.cat)||{emoji:'📦'};
-        const historical = tx.historical ? '<span style="font-size:10px;background:#EEF0F8;color:#6070B0;padding:1px 5px;border-radius:99px;margin-left:4px">補登</span>' : '';
+        const historical = tx.historical ? '<span style="font-size:1.0rem;background:#EEF0F8;color:#6070B0;padding:1px 5px;border-radius:99px;margin-left:4px">補登</span>' : '';
         return `<div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--bdr)">
-          <div style="font-size:13px;width:28px;text-align:center">${cat.emoji}</div>
+          <div style="font-size:1.3rem;width:28px;text-align:center">${cat.emoji}</div>
           <div style="flex:1">
-            <div style="font-size:13px;font-weight:600">${tx.note||label}${historical}</div>
-            <div style="font-size:11px;color:var(--txl)">${fmtDk(tx.dk)||''} · <span style="font-size:10px;background:var(--pale);padding:1px 6px;border-radius:99px">${label}</span></div>
+            <div style="font-size:1.3rem;font-weight:600">${tx.note||label}${historical}</div>
+            <div style="font-size:1.1rem;color:var(--txl)">${fmtDk(tx.dk)||''} · <span style="font-size:1.0rem;background:var(--pale);padding:1px 6px;border-radius:99px">${label}</span></div>
           </div>
-          <div style="font-size:14px;font-weight:700;color:${color}">${amt>=0?'+':'-'}${fmt(Math.abs(amt))}</div>
+          <div style="font-size:1.4rem;font-weight:700;color:${color}">${amt>=0?'+':'-'}${fmt(Math.abs(amt))}</div>
         </div>`;
       }).join('');
 
@@ -3666,16 +3666,16 @@ function renderIncCatManage() {
   const custom = D.incCats||[];
   const defaults = INC_CATS_DEFAULT.map(c=>`
     <div class="bset-row" style="opacity:0.6">
-      <span style="font-size:18px">${c.emoji}</span>
-      <div style="flex:1"><div style="font-size:13px;font-weight:600">${c.name}</div>
-      <div style="font-size:11px;color:var(--txl)">預設</div></div>
+      <span style="font-size:1.8rem">${c.emoji}</span>
+      <div style="flex:1"><div style="font-size:1.3rem;font-weight:600">${c.name}</div>
+      <div style="font-size:1.1rem;color:var(--txl)">預設</div></div>
     </div>`).join('');
   const customs = custom.map(c=>`
     <div class="bset-row" style="opacity:${c.archived?0.4:1}">
-      <span style="font-size:18px">${c.emoji}</span>
-      <div style="flex:1"><div style="font-size:13px;font-weight:600">${c.name}${c.archived?` <span style="font-size:10px;background:#F0EDEA;color:#A09080;padding:2px 6px;border-radius:99px">封存</span>`:''}</div></div>
+      <span style="font-size:1.8rem">${c.emoji}</span>
+      <div style="flex:1"><div style="font-size:1.3rem;font-weight:600">${c.name}${c.archived?` <span style="font-size:1.0rem;background:#F0EDEA;color:#A09080;padding:2px 6px;border-radius:99px">封存</span>`:''}</div></div>
       <div style="display:flex;gap:4px">
-        <button class="btn-sm ghost" onclick="archiveIncCat('${c.id}')" style="font-size:11px;padding:4px 8px">${c.archived?'取消封存':'封存'}</button>
+        <button class="btn-sm ghost" onclick="archiveIncCat('${c.id}')" style="font-size:1.1rem;padding:4px 8px">${c.archived?'取消封存':'封存'}</button>
       </div>
     </div>`).join('');
   el.innerHTML = defaults + (customs||'');
@@ -3718,10 +3718,10 @@ function renderRateList() {
   const rates = getRates();
   el.innerHTML = CURRENCIES.filter(c=>c.code!=='TWD').map(cur=>`
     <div class="bset-row">
-      <span style="font-size:18px">${cur.flag}</span>
+      <span style="font-size:1.8rem">${cur.flag}</span>
       <div style="flex:1">
-        <div style="font-size:13px;font-weight:600">${cur.name}（${cur.code}）</div>
-        <div style="font-size:11px;color:var(--txl)">1 ${cur.code} = ? TWD</div>
+        <div style="font-size:1.3rem;font-weight:600">${cur.name}（${cur.code}）</div>
+        <div style="font-size:1.1rem;color:var(--txl)">1 ${cur.code} = ? TWD</div>
       </div>
       <input type="number" class="binp" value="${rates[cur.code]||''}" step="0.01" placeholder="匯率"
         onchange="updateRate('${cur.code}',this.value)" style="width:80px">
