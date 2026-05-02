@@ -1603,17 +1603,41 @@ function txMK(t) {
 
 // 修復舊版 ISO 時間戳格式的 mk，啟動時自動執行
 function migrateLegacyMK() {
+  // 統一日期格式：dk → YYYY-MM-DD，mk → YYYY-MM
+  // 處理舊版 ISO 時間戳、無橫線格式、其他異常值
+  function toStandardDk(raw) {
+    if (!raw) return null;
+    const s = String(raw).trim();
+    // 已是 YYYY-MM-DD
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+    // YYYYMMDD（無橫線）
+    if (/^\d{8}$/.test(s)) return s.slice(0,4)+'-'+s.slice(4,6)+'-'+s.slice(6,8);
+    // ISO 時間戳 2026-04-10T16:00:00.000Z → 取前10碼
+    if (s.length >= 10 && /^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
+    return null;
+  }
+  function toStandardMk(raw) {
+    if (!raw) return null;
+    const s = String(raw).trim();
+    // 已是 YYYY-MM
+    if (/^\d{4}-\d{2}$/.test(s)) return s;
+    // ISO 時間戳或 YYYY-MM-DD → 取前7碼
+    if (s.length >= 7 && /^\d{4}-\d{2}/.test(s)) return s.slice(0,7);
+    return null;
+  }
+
   let fixed = 0;
   (D.txs||[]).forEach(t => {
-    const correct = txMK(t);
-    if (t.mk !== correct) {
-      t.mk = correct;
-      fixed++;
-    }
+    const goodDk = toStandardDk(t.dk);
+    const goodMk = goodDk ? goodDk.slice(0,7) : toStandardMk(t.mk);
+    let changed = false;
+    if (goodDk && t.dk !== goodDk) { t.dk = goodDk; changed = true; }
+    if (goodMk && t.mk !== goodMk) { t.mk = goodMk; changed = true; }
+    if (changed) fixed++;
   });
   if (fixed > 0) {
     save();
-    console.log(`[migrate] 修復 ${fixed} 筆交易的月份鍵`);
+    console.log(`[migrate] 修復 ${fixed} 筆交易的日期格式`);
   }
 }
 function getTK() {
@@ -1925,8 +1949,8 @@ function confirmSettle() {
   const toAcc = document.getElementById('settleAcc').value;
   // parse selected date
   const dateVal = document.getElementById('settleDate').value;
-  const settleDk = dateVal ? dateVal.replace(/-/g,'') : getTK();
-  const settleMk = settleDk.slice(0,6);
+  const settleDk = dateVal ? dateVal.slice(0,10) : getTK();
+  const settleMk = settleDk.slice(0,7);
   // mark claim as settled
   claim.status = 'done';
   claim.settledAcc = toAcc;
