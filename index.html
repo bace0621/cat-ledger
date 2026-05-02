@@ -1965,7 +1965,7 @@ function renderHome() {
   document.getElementById('budgetSub').textContent = `預算 ${fmt(BUDGET)}，已花 ${fmt(budgetSpent)}`;
   document.getElementById('budgetBar').style.width = pct+'%';
   document.getElementById('totalSpent').textContent = fmt(totalExp);
-  document.getElementById('txCount').textContent = txs.length+' 筆';
+  document.getElementById('txCount').textContent = exps.length+' 筆';
   document.getElementById('totalIncome').textContent = fmt(totalInc);
   document.getElementById('todaySpent').textContent = fmt(todayExp);
   renderHomePie();
