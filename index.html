@@ -400,38 +400,6 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
 <!-- ══ 總覽 & 記帳 ══ -->
 <div id="pg-home" class="pg active">
 
-  <!-- 月份切換列 -->
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding:0 2px">
-    <button onclick="homeNavMonth(-1)" style="background:none;border:none;font-size:2.0rem;color:var(--a2);cursor:pointer;padding:4px 10px;border-radius:var(--rxs)">‹</button>
-    <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
-      <div id="homeMonthLabel" style="font-family:'DM Serif Display',serif;font-size:1.8rem;font-weight:700;color:var(--tx)"></div>
-      <button onclick="homeResetMonth()" id="homeTodayBtn" style="display:none;font-size:1.1rem;color:var(--a2);background:none;border:none;cursor:pointer;font-family:inherit;font-weight:700">回本月</button>
-    </div>
-    <button onclick="homeNavMonth(1)" id="homeNextBtn" style="background:none;border:none;font-size:2.0rem;color:var(--a2);cursor:pointer;padding:4px 10px;border-radius:var(--rxs)">›</button>
-  </div>
-
-  <!-- A: 本月支出 & 收入 -->
-  <div class="sgrid">
-    <div class="scard">
-      <div class="scard-lbl" id="lbl-spent">本月支出</div>
-      <div class="scard-val" id="totalSpent">$0</div>
-      <div class="scard-sub">今日支出 <span id="todaySpent">$0</span></div>
-      <div class="scard-sub" id="txCount">0 筆</div>
-    </div>
-    <div class="scard">
-      <div class="scard-lbl" id="lbl-income">本月收入</div>
-      <div class="scard-val" id="totalIncome" style="color:#2A9A58">$0</div>
-    </div>
-  </div>
-
-  <!-- B: 預算剩餘 hero -->
-  <div class="hero">
-    <div class="hero-lbl">本月預算剩餘</div>
-    <div class="hero-amt" id="budgetLeft">$0</div>
-    <div class="hero-sub" id="budgetSub"></div>
-    <div class="hero-bar-bg"><div class="hero-bar" id="budgetBar" style="width:100%"></div></div>
-  </div>
-
   <!-- 快速記帳 -->
   <div class="card">
     <div class="card-ttl">快速記帳</div>
@@ -557,6 +525,38 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
     </div>
   </div>
 
+  <!-- 月份切換列 -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding:0 2px">
+    <button onclick="homeNavMonth(-1)" style="background:none;border:none;font-size:2.0rem;color:var(--a2);cursor:pointer;padding:4px 10px;border-radius:var(--rxs)">‹</button>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+      <div id="homeMonthLabel" style="font-family:'DM Serif Display',serif;font-size:1.8rem;font-weight:700;color:var(--tx)"></div>
+      <button onclick="homeResetMonth()" id="homeTodayBtn" style="display:none;font-size:1.1rem;color:var(--a2);background:none;border:none;cursor:pointer;font-family:inherit;font-weight:700">回本月</button>
+    </div>
+    <button onclick="homeNavMonth(1)" id="homeNextBtn" style="background:none;border:none;font-size:2.0rem;color:var(--a2);cursor:pointer;padding:4px 10px;border-radius:var(--rxs)">›</button>
+  </div>
+
+  <!-- A: 本月支出 & 收入 -->
+  <div class="sgrid">
+    <div class="scard">
+      <div class="scard-lbl" id="lbl-spent">本月支出</div>
+      <div class="scard-val" id="totalSpent">$0</div>
+      <div class="scard-sub">今日支出 <span id="todaySpent">$0</span></div>
+      <div class="scard-sub" id="txCount">0 筆</div>
+    </div>
+    <div class="scard">
+      <div class="scard-lbl" id="lbl-income">本月收入</div>
+      <div class="scard-val" id="totalIncome" style="color:#2A9A58">$0</div>
+    </div>
+  </div>
+
+  <!-- B: 預算剩餘 hero -->
+  <div class="hero">
+    <div class="hero-lbl">本月預算剩餘</div>
+    <div class="hero-amt" id="budgetLeft">$0</div>
+    <div class="hero-sub" id="budgetSub"></div>
+    <div class="hero-bar-bg"><div class="hero-bar" id="budgetBar" style="width:100%"></div></div>
+  </div>
+
   <!-- 近期記錄 -->
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
@@ -593,7 +593,10 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
         <button id="pieTabInc" onclick="setPieTab('inc')" style="padding:4px 12px;border-radius:99px;border:1.5px solid var(--bdrm);background:transparent;color:var(--txm);font-family:inherit;font-size:1.1rem;font-weight:700;cursor:pointer;transition:all .15s">收入</button>
       </div>
     </div>
-    <div style="position:relative;width:100%;height:180px"><canvas id="homePieChart"></canvas></div>
+    <div style="position:relative;width:100%;height:180px">
+      <canvas id="homePieChart"></canvas>
+      <div id="homePieEmpty" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;font-size:1.2rem;color:var(--txl)"></div>
+    </div>
     <div id="homePieTotals" style="display:flex;justify-content:center;gap:20px;margin-top:10px;padding-top:10px;border-top:1px solid var(--bdr)"></div>
   </div>
 
@@ -1988,11 +1991,13 @@ function homeNavMonth(delta) {
   const d = new Date(y, m - 1 + delta, 1);
   homeViewMK = getMK(d);
   calViewMonth = d;
+  document.querySelectorAll('[id^="subDetail_"]').forEach(el => el.style.display = 'none');
   renderHome();
 }
 function homeResetMonth() {
   homeViewMK = curMK();
   calViewMonth = new Date();
+  document.querySelectorAll('[id^="subDetail_"]').forEach(el => el.style.display = 'none');
   renderHome();
 }
 
@@ -3463,7 +3468,7 @@ function toggleSubDetail(catId) {
   if (!el) return;
   if (el.style.display === 'none') {
     // fill content
-    const mk = curMK();
+    const mk = homeViewMK;
     const txs = D.txs.filter(t=>
       ((t.mk||'').slice(0,7)===mk||(t.dk||'').slice(0,7)===mk) &&
       t.type==='exp' && t.cat===catId && !t.historical
@@ -3510,14 +3515,22 @@ function renderHomePie() {
   const totalExp = exps.reduce((s,e)=>s+e.amt,0);
   const totalInc = incs.reduce((s,i)=>s+i.amt,0);
   const canvas = document.getElementById('homePieChart');
+  const emptyEl = document.getElementById('homePieEmpty');
+  const totalsEl = document.getElementById('homePieTotals');
   if (!canvas) return;
   destroyChart('homePie');
-  if (totalExp===0 && totalInc===0) {
-    canvas.parentElement.innerHTML = '<div style="height:180px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:var(--txl)">本月尚無記錄</div>';
-    const totalsEl = document.getElementById('homePieTotals');
+
+  const showEmpty = (msg) => {
+    canvas.style.display = 'none';
+    if (emptyEl) { emptyEl.style.display = 'flex'; emptyEl.textContent = msg; }
     if (totalsEl) totalsEl.style.display = 'none';
-    return;
-  }
+  };
+  const showChart = () => {
+    canvas.style.display = '';
+    if (emptyEl) emptyEl.style.display = 'none';
+  };
+
+  if (totalExp===0 && totalInc===0) { showEmpty('本月尚無記錄'); return; }
   // build breakdown by category for active tab
   const activeTxs = homePieTab === 'exp' ? exps : incs;
   const byCat = {};
@@ -3527,8 +3540,9 @@ function renderHomePie() {
   const incColors = ['#2A9A58','#4EB87A','#1A7040','#80C898','#60A878','#38B870'];
   const pieColors = homePieTab === 'exp' ? expColors : incColors;
   if (!entries.length) {
-    canvas.parentElement.innerHTML = `<div style="height:180px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:var(--txl)">本月尚無${homePieTab==='exp'?'支出':'收入'}記錄</div>`;
+    showEmpty(`本月尚無${homePieTab==='exp'?'支出':'收入'}記錄`);
   } else {
+    showChart();
     chartInsts['homePie'] = new Chart(canvas, {
       type:'doughnut',
       data:{
@@ -3545,7 +3559,6 @@ function renderHomePie() {
     });
   }
   // 顯示支出／收入總額
-  const totalsEl = document.getElementById('homePieTotals');
   if (totalsEl) {
     totalsEl.style.display = 'flex';
     totalsEl.innerHTML =
@@ -3605,6 +3618,7 @@ function calPrevMonth() {
   calViewMonth = new Date(calViewMonth.getFullYear(), calViewMonth.getMonth()-1, 1);
   calSelDate = null;
   homeViewMK = getMK(calViewMonth);
+  document.querySelectorAll('[id^="subDetail_"]').forEach(el => el.style.display = 'none');
   renderCal();
   renderHome();
 }
@@ -3612,6 +3626,7 @@ function calNextMonth() {
   calViewMonth = new Date(calViewMonth.getFullYear(), calViewMonth.getMonth()+1, 1);
   calSelDate = null;
   homeViewMK = getMK(calViewMonth);
+  document.querySelectorAll('[id^="subDetail_"]').forEach(el => el.style.display = 'none');
   renderCal();
   renderHome();
 }
