@@ -557,33 +557,6 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
     <div class="hero-bar-bg"><div class="hero-bar" id="budgetBar" style="width:100%"></div></div>
   </div>
 
-  <!-- 近期記錄 -->
-  <div class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <div class="card-ttl" style="margin-bottom:0">近期記錄</div>
-      <div style="display:flex;gap:6px">
-        <button onclick="scrollToQuickAdd()" style="padding:5px 10px;border:1.5px solid var(--bdrm);border-radius:var(--rxs);background:var(--surf);font-family:inherit;font-size:1.1rem;font-weight:700;color:var(--txm);cursor:pointer">✚ 新增</button>
-        <button onclick="setViewMode('list')" id="btn-list" style="padding:5px 10px;border:1.5px solid var(--a1);border-radius:var(--rxs);background:var(--pale);font-family:inherit;font-size:1.1rem;font-weight:700;color:var(--a2);cursor:pointer">📋 列表</button>
-        <button onclick="setViewMode('cal')" id="btn-cal" style="padding:5px 10px;border:1.5px solid var(--bdrm);border-radius:var(--rxs);background:var(--surf);font-family:inherit;font-size:1.1rem;font-weight:700;color:var(--txm);cursor:pointer">📅 日曆</button>
-      </div>
-    </div>
-    <div id="view-list">
-      <div class="search-wrap">
-        <input type="text" class="search-inp" id="searchInp" placeholder="🔍 搜尋記錄..." oninput="renderHome()">
-      </div>
-      <div id="recentTx"></div>
-    </div>
-    <div id="view-cal" style="display:none">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <button onclick="calPrevMonth()" style="background:none;border:1.5px solid var(--bdrm);border-radius:var(--rxs);padding:6px 12px;font-size:1.4rem;cursor:pointer;color:var(--txm)">‹</button>
-        <div style="font-family:'DM Serif Display',serif;font-size:1.6rem" id="calTitle"></div>
-        <button onclick="calNextMonth()" style="background:none;border:1.5px solid var(--bdrm);border-radius:var(--rxs);padding:6px 12px;font-size:1.4rem;cursor:pointer;color:var(--txm)">›</button>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px" id="calGrid"></div>
-      <div id="calDetail" style="display:none;background:var(--bg);border-radius:var(--rsm);padding:12px;margin-top:8px;border:1px solid var(--bdr)"></div>
-    </div>
-  </div>
-
   <!-- 本月收支分布 -->
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
@@ -604,6 +577,32 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
   <div class="card">
     <div class="card-ttl">子預算追蹤</div>
     <div id="subBudget"></div>
+  </div>
+
+  <!-- 日曆 + 明細 -->
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="card-ttl" style="margin-bottom:0">近期記錄</div>
+      <div style="display:flex;gap:6px">
+        <button onclick="scrollToQuickAdd()" style="padding:5px 10px;border:1.5px solid var(--bdrm);border-radius:var(--rxs);background:var(--surf);font-family:inherit;font-size:1.1rem;font-weight:700;color:var(--txm);cursor:pointer">✚ 新增</button>
+        <button onclick="setViewMode('cal')" id="btn-cal" style="padding:5px 10px;border:1.5px solid var(--a1);border-radius:var(--rxs);background:var(--pale);font-family:inherit;font-size:1.1rem;font-weight:700;color:var(--a2);cursor:pointer">📅 日曆</button>
+        <button onclick="setViewMode('list')" id="btn-list" style="padding:5px 10px;border:1.5px solid var(--bdrm);border-radius:var(--rxs);background:var(--surf);font-family:inherit;font-size:1.1rem;font-weight:700;color:var(--txm);cursor:pointer">📋 列表</button>
+      </div>
+    </div>
+
+    <!-- 日曆（預設顯示） -->
+    <div id="view-cal">
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px" id="calGrid"></div>
+      <div id="calDetail" style="display:none;background:var(--bg);border-radius:var(--rsm);padding:12px;margin-top:8px;border:1px solid var(--bdr)"></div>
+    </div>
+
+    <!-- 清單明細（預設隱藏） -->
+    <div id="view-list" style="display:none">
+      <div class="search-wrap">
+        <input type="text" class="search-inp" id="searchInp" placeholder="🔍 搜尋記錄..." oninput="renderHome()">
+      </div>
+      <div id="recentTx"></div>
+    </div>
   </div>
 
 </div>
@@ -1731,7 +1730,7 @@ function showPg(name, btn) {
   document.querySelectorAll('.bb').forEach(b=>b.classList.remove('active'));
   document.getElementById('pg-'+name).classList.add('active');
   if (btn) btn.classList.add('active');
-  if (name==='home') renderHome();
+  if (name==='home') { renderHome(); setViewMode(currentViewMode); }
   if (name==='accounts') renderAccounts();
   if (name==='report') renderReport();
   if (name==='settings') renderSettings();
@@ -3601,7 +3600,7 @@ function closeOnboarding() {
 // ══ CALENDAR ══
 let calViewMonth = new Date();
 let calSelDate = null;
-let currentViewMode = 'list';
+let currentViewMode = 'cal';
 
 function setViewMode(mode) {
   currentViewMode = mode;
@@ -3634,7 +3633,8 @@ function calNextMonth() {
 function renderCal() {
   const y=calViewMonth.getFullYear(), m=calViewMonth.getMonth();
   const mk=`${y}-${String(m+1).padStart(2,'0')}`;
-  document.getElementById('calTitle').textContent=`${y}年${m+1}月`;
+  const calTitleEl = document.getElementById('calTitle');
+  if (calTitleEl) calTitleEl.textContent=`${y}年${m+1}月`;
   const dayMap={};
   D.txs.forEach(tx=>{
     const dk=(tx.dk||'').slice(0,10);
