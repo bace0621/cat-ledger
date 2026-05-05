@@ -2147,6 +2147,8 @@ function renderHome() {
     }).join('');
     return `<div class="tx-date-group"><span>${dk}</span>${netStr}</div>${txsHtml}`;
   }).join('');
+  // 確保日曆也同步渲染
+  if (currentViewMode === 'cal') renderCal();
 }
 
 // ══ RENDER ACCOUNTS ══
