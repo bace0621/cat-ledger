@@ -400,16 +400,26 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
 <!-- ══ 總覽 & 記帳 ══ -->
 <div id="pg-home" class="pg active">
 
+  <!-- 月份切換列 -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding:0 2px">
+    <button onclick="homeNavMonth(-1)" style="background:none;border:none;font-size:2.0rem;color:var(--a2);cursor:pointer;padding:4px 10px;border-radius:var(--rxs)">‹</button>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+      <div id="homeMonthLabel" style="font-family:'DM Serif Display',serif;font-size:1.8rem;font-weight:700;color:var(--tx)"></div>
+      <button onclick="homeResetMonth()" id="homeTodayBtn" style="display:none;font-size:1.1rem;color:var(--a2);background:none;border:none;cursor:pointer;font-family:inherit;font-weight:700">回本月</button>
+    </div>
+    <button onclick="homeNavMonth(1)" id="homeNextBtn" style="background:none;border:none;font-size:2.0rem;color:var(--a2);cursor:pointer;padding:4px 10px;border-radius:var(--rxs)">›</button>
+  </div>
+
   <!-- A: 本月支出 & 收入 -->
   <div class="sgrid">
     <div class="scard">
-      <div class="scard-lbl">本月支出</div>
+      <div class="scard-lbl" id="lbl-spent">本月支出</div>
       <div class="scard-val" id="totalSpent">$0</div>
       <div class="scard-sub">今日支出 <span id="todaySpent">$0</span></div>
       <div class="scard-sub" id="txCount">0 筆</div>
     </div>
     <div class="scard">
-      <div class="scard-lbl">本月收入</div>
+      <div class="scard-lbl" id="lbl-income">本月收入</div>
       <div class="scard-val" id="totalIncome" style="color:#2A9A58">$0</div>
     </div>
   </div>
@@ -951,7 +961,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
 
   <!-- 每月收支長條 -->
   <div class="card">
-    <div class="card-ttl">📊 每月收支比較</div>
+    <div class="card-ttl">📈 每月收支比較</div>
     <div class="chart-wrap"><canvas id="barChart"></canvas></div>
   </div>
 
@@ -1971,8 +1981,40 @@ function deleteTx(id) {
 }
 
 // ══ RENDER HOME ══
+let homeViewMK = curMK(); // 目前首頁檢視的月份
+
+function homeNavMonth(delta) {
+  const [y, m] = homeViewMK.split('-').map(Number);
+  const d = new Date(y, m - 1 + delta, 1);
+  homeViewMK = getMK(d);
+  calViewMonth = d;
+  renderHome();
+}
+function homeResetMonth() {
+  homeViewMK = curMK();
+  calViewMonth = new Date();
+  renderHome();
+}
+
 function renderHome() {
-  const mk = curMK();
+  const mk = homeViewMK;
+  const isCurMonth = mk === curMK();
+  const [vy, vm] = mk.split('-').map(Number);
+  // 更新月份標題
+  const monthLabelEl = document.getElementById('homeMonthLabel');
+  if (monthLabelEl) monthLabelEl.textContent = `${vy}年${vm}月`;
+  const todayBtn = document.getElementById('homeTodayBtn');
+  if (todayBtn) todayBtn.style.display = isCurMonth ? 'none' : 'block';
+  const nextBtn = document.getElementById('homeNextBtn');
+  if (nextBtn) nextBtn.style.opacity = isCurMonth ? '0.2' : '1';
+  // 動態標籤
+  const prefix = isCurMonth ? '本月' : `${vm}月`;
+  const lblSpent = document.getElementById('lbl-spent');
+  const lblIncome = document.getElementById('lbl-income');
+  if (lblSpent) lblSpent.textContent = prefix + '支出';
+  if (lblIncome) lblIncome.textContent = prefix + '收入';
+  const heroLbl = document.querySelector('.hero-lbl');
+  if (heroLbl) heroLbl.textContent = prefix + '預算剩餘';
   const txs = D.txs.filter(t=>(t.mk||'').slice(0,7)===mk || (t.dk||'').slice(0,7)===mk);
   const exps = txs.filter(t=>t.type==='exp');
   const incs = txs.filter(t=>t.type==='inc');
@@ -1991,7 +2033,11 @@ function renderHome() {
   document.getElementById('totalSpent').textContent = fmt(totalExp);
   document.getElementById('txCount').textContent = exps.length+' 筆';
   document.getElementById('totalIncome').textContent = fmt(totalInc);
-  document.getElementById('todaySpent').textContent = fmt(todayExp);
+  const todayRow = document.getElementById('todaySpent');
+  if (todayRow) {
+    todayRow.textContent = fmt(todayExp);
+    todayRow.parentElement.style.display = isCurMonth ? '' : 'none';
+  }
   renderHomePie();
 
   // Sub-budget
@@ -2022,8 +2068,11 @@ function renderHome() {
   const query = getSearchQuery();
   const allCatsSearch = [...D.cats, ...getIncCats()];
   const sorted = [...D.txs].sort((a,b)=>b.ts-a.ts);
+  const monthFiltered = isCurMonth
+    ? sorted
+    : sorted.filter(t => (t.mk||'').slice(0,7)===mk || (t.dk||'').slice(0,7)===mk);
   const recent = query
-    ? sorted.filter(tx => {
+    ? monthFiltered.filter(tx => {
         const cat = allCatsSearch.find(c=>c.id===tx.cat)||{name:''};
         const acc = D.accounts.find(a=>a.id===tx.acc)||{name:''};
         return (tx.note||'').toLowerCase().includes(query) ||
@@ -2031,7 +2080,7 @@ function renderHome() {
                acc.name.toLowerCase().includes(query) ||
                String(tx.amt).includes(query);
       })
-    : sorted.slice(0,50);
+    : monthFiltered.slice(0,50);
   // 按日期分組
   const allCatsR = [...D.cats,...getIncCats()];
   const grouped = {};
@@ -2646,12 +2695,23 @@ function renderReport() {
     barExp.push(D.txs.filter(t=>txMK(t)===bmk&&t.type==='exp').reduce((s,t)=>s+t.amt,0));
   }
   chartInsts['bar'] = new Chart(document.getElementById('barChart'), {
-    type:'bar',
+    type:'line',
     data:{labels:barMonths,datasets:[
-      {label:'收入',data:barInc,backgroundColor:'rgba(42,154,88,0.7)',borderRadius:6},
-      {label:'支出',data:barExp,backgroundColor:'rgba(242,169,59,0.7)',borderRadius:6},
+      {label:'收入',data:barInc,borderColor:'#1A8840',backgroundColor:'rgba(26,136,64,0.08)',fill:true,tension:0.4,pointRadius:5,pointBackgroundColor:'#1A8840',pointBorderColor:'#fff',pointBorderWidth:2},
+      {label:'支出',data:barExp,borderColor:'#C4520E',backgroundColor:'rgba(196,82,14,0.08)',fill:true,tension:0.4,pointRadius:5,pointBackgroundColor:'#C4520E',pointBorderColor:'#fff',pointBorderWidth:2},
     ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11},boxWidth:12}}},scales:{x:{ticks:{font:{size:11}},grid:{display:false}},y:{ticks:{font:{size:10},callback:v=>'$'+(v/10000).toFixed(1)+'萬'},grid:{color:'rgba(0,0,0,0.05)'}}}}
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{labels:{font:{size:11},boxWidth:12,usePointStyle:true,pointStyle:'circle'}},
+        tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${fmt(ctx.raw)}`}}
+      },
+      scales:{
+        x:{ticks:{font:{size:11}},grid:{display:false}},
+        y:{ticks:{font:{size:10},callback:v=>'$'+(v/10000).toFixed(1)+'萬'},grid:{color:'rgba(0,0,0,0.05)'}}
+      }
+    }
   });
 }
 
@@ -3438,7 +3498,7 @@ function setPieTab(tab) {
   renderHomePie();
 }
 function renderHomePie() {
-  const mk = curMK();
+  const mk = homeViewMK;
   const exps = D.txs.filter(t=>
     ((t.mk||'').slice(0,7)===mk||(t.dk||'').slice(0,7)===mk) &&
     t.type==='exp' && !t.historical
@@ -3541,8 +3601,20 @@ function setViewMode(mode) {
   if (mode==='cal') renderCal();
 }
 
-function calPrevMonth() { calViewMonth=new Date(calViewMonth.getFullYear(),calViewMonth.getMonth()-1,1); calSelDate=null; renderCal(); }
-function calNextMonth() { calViewMonth=new Date(calViewMonth.getFullYear(),calViewMonth.getMonth()+1,1); calSelDate=null; renderCal(); }
+function calPrevMonth() {
+  calViewMonth = new Date(calViewMonth.getFullYear(), calViewMonth.getMonth()-1, 1);
+  calSelDate = null;
+  homeViewMK = getMK(calViewMonth);
+  renderCal();
+  renderHome();
+}
+function calNextMonth() {
+  calViewMonth = new Date(calViewMonth.getFullYear(), calViewMonth.getMonth()+1, 1);
+  calSelDate = null;
+  homeViewMK = getMK(calViewMonth);
+  renderCal();
+  renderHome();
+}
 
 function renderCal() {
   const y=calViewMonth.getFullYear(), m=calViewMonth.getMonth();
