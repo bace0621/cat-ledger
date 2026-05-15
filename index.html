@@ -1947,7 +1947,6 @@ function addClaim() {
 let settleTargetId = null;
 function openSettle(claimId) {
   settleTargetId = claimId;
-  // Show modal immediately for instant feedback
   const modal = document.getElementById('settleModal');
   modal.style.display = 'flex';
   requestAnimationFrame(() => modal.classList.add('visible'));
@@ -1956,10 +1955,8 @@ function openSettle(claimId) {
   document.getElementById('settleClaimName').textContent = `${claim.note}・${fmt(claim.amt)}`;
   const opts = D.accounts.filter(a=>!a.archived).map(a=>`<option value="${a.id}">${a.emoji} ${a.name}</option>`).join('');
   document.getElementById('settleAcc').innerHTML = opts;
-  // default to first bank account
   const bankIdx = D.accounts.findIndex(a=>a.type==='bank');
   if (bankIdx>=0) document.getElementById('settleAcc').selectedIndex = bankIdx;
-  // pre-fill today's date
   const todayStr = new Date().toISOString().slice(0,10);
   document.getElementById('settleDate').value = todayStr;
 }
@@ -1994,9 +1991,7 @@ function cancelSettle(claimId) {
   if (!confirm('確定取消這筆沖銷？帳戶餘額將一併還原。')) return;
   const claim = D.claims.find(c => c.id === claimId);
   if (!claim || claim.status !== 'done') return;
-  // Remove the associated settle tx
   D.txs = D.txs.filter(t => !(t.type === 'settle' && t.claimId === claimId));
-  // Reset claim to pending
   claim.status = 'pending';
   delete claim.settledAcc;
   delete claim.settledAt;
@@ -2194,14 +2189,12 @@ function renderAccounts() {
   const el1=document.getElementById('accClmTotal'); if(el1) el1.textContent=fmt(tot);
   const el2=document.getElementById('accClmRecovered'); if(el2) el2.textContent=fmt(rec);
   const el3=document.getElementById('accClmOwed'); if(el3) el3.textContent=fmt(tot-rec);
-  // 今日回收：今天 settledAt 的已沖銷墊款加總
   const todayStr = new Date().toISOString().slice(0,10);
   const todaySettled = claims.filter(c=>c.status==='done' && c.settledAt && c.settledAt.slice(0,10)===todayStr);
   const todayAmt = todaySettled.reduce((s,c)=>s+c.amt,0);
   const el4=document.getElementById('accClmToday'); if(el4) el4.textContent=fmt(todayAmt);
   const el5=document.getElementById('accClmTodayCount');
   if(el5) el5.textContent=todaySettled.length>0?`共 ${todaySettled.length} 筆`:todayAmt===0?'今日尚無回收':'';
-
   const cl=document.getElementById('accClaimList');
   if(cl) {
     const sorted=[...claims].sort((a,b)=>{if(a.status==='pending'&&b.status!=='pending')return -1;if(b.status==='pending'&&a.status!=='pending')return 1;return b.ts-a.ts;});
@@ -3683,7 +3676,7 @@ function renderCal() {
     if(!dayMap[dk]) dayMap[dk]={exp:0,inc:0,txs:[]};
     if(tx.type==='exp') dayMap[dk].exp+=tx.amt;
     if(tx.type==='inc') dayMap[dk].inc+=tx.amt;
-    if(tx.type==='clm') dayMap[dk].exp+=tx.amt; // 墊款算支出顯示
+    if(tx.type==='clm') dayMap[dk].exp+=tx.amt;
     dayMap[dk].txs.push(tx);
   });
   const today=getTK();
@@ -3723,15 +3716,14 @@ function showCalDetail(dk, info) {
   const allCats=[...D.cats,...getIncCats()];
   detail.innerHTML=`<div style="font-size:1.1rem;font-weight:700;color:var(--txl);margin-bottom:8px">${dk}</div>`+
     info.txs.sort((a,b)=>b.ts-a.ts).map(tx=>{
-      const isClm = tx.type==='clm';
-      const isSettle = tx.type==='settle';
+      const isClm=tx.type==='clm', isSettle=tx.type==='settle';
       const cat=allCats.find(c=>c.id===tx.cat)||{emoji:'📦',name:''};
-      const ico = isSettle?'✅':isClm?'🧾':cat.emoji;
-      const typeClass = (isClm||isSettle)?'clm':tx.type;
-      const amtPrefix = isSettle?'+': (tx.type==='inc'?'+':'−');
+      const ico=isSettle?'✅':isClm?'🧾':cat.emoji;
+      const typeClass=(isClm||isSettle)?'clm':tx.type;
+      const amtPrefix=isSettle?'+':(tx.type==='inc'?'+':'−');
       const acc=D.accounts.find(a=>a.id===tx.acc);
-      const tag = isClm?`<span class="tag" style="background:#FFF8E0;color:#A07000;margin-left:4px">墊款</span>`
-                : isSettle?`<span class="tag" style="background:#E0F5E8;color:#1A7A40;margin-left:4px">回款</span>`:'';
+      const tag=isClm?`<span class="tag" style="background:#FFF8E0;color:#A07000;margin-left:4px">墊款</span>`
+               :isSettle?`<span class="tag" style="background:#E0F5E8;color:#1A7A40;margin-left:4px">回款</span>`:'';
       return `<div class="tx-item" style="padding:7px 0">
         <div class="tx-ico ${typeClass}">${ico}</div>
         <div class="tx-info"><div class="tx-name">${tx.note||cat.name}${tag}</div>
@@ -4046,7 +4038,6 @@ function openEditTx(id) {
   document.getElementById('editAmt').value = tx.amt || '';
   document.getElementById('editNote').value = tx.note || '';
   document.getElementById('editDate').value = fmtDk(tx.dk) || getTK();
-  // 類別列：clm/settle 不顯示
   const _catRow = document.getElementById('editCatRow');
   const _catGrid = document.getElementById('editCatGrid');
   if ((tx.type==='exp'||tx.type==='inc') && _catRow && _catGrid) {
@@ -4061,7 +4052,6 @@ function openEditTx(id) {
   } else if (_catRow) {
     _catRow.style.display = 'none';
   }
-  // 帳戶選單（轉帳/settle 不顯示）
   const accRow = document.getElementById('editAccRow');
   const accSel = document.getElementById('editAccSel');
   if (tx.type==='trf'||tx.type==='settle') {
@@ -4074,7 +4064,6 @@ function openEditTx(id) {
       if (idx>=0) accSel.selectedIndex = idx;
     }
   }
-  // 類別選擇（clm/settle/trf 不顯示）
   const catRow=document.getElementById('editCatRow');
   const catGrid=document.getElementById('editCatGrid');
   if (catRow&&catGrid&&(tx.type==='exp'||tx.type==='inc')) {
@@ -4109,7 +4098,6 @@ function confirmEditTx() {
     if (window._editCat) tx.cat=window._editCat;
   }
   save();
-  // 若為墊款 tx，同步更新 D.claims 對應記錄
   if (tx.type==='clm' && tx.claimId) {
     const claim = (D.claims||[]).find(c=>c.id===tx.claimId);
     if (claim) { claim.amt=tx.amt; claim.note=tx.note; claim.dk=tx.dk; claim.mk=tx.mk; }
