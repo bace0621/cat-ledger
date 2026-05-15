@@ -12,6 +12,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="貓貓帳務所">
 <link rel="apple-touch-icon" href="icons/pwa-icon-192.png">
+<link rel="icon" type="image/png" href="icons/pwa-icon-512.png">
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', ()=>{
@@ -1242,16 +1243,9 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
 
 <!-- Settle modal -->
 <div id="settleModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:200;align-items:center;justify-content:center;">
-  <div style="background:var(--surf);border-radius:var(--r);padding:24px;margin:0 20px;width:calc(100% - 40px);max-width:420px;max-height:85vh;overflow-y:auto">
+  <div style="background:var(--surf);border-radius:var(--r);padding:24px;margin:0 20px;width:calc(100% - 40px);max-width:400px">
     <div style="font-size:1.5rem;font-weight:700;margin-bottom:4px">沖銷回款</div>
-    <div id="settleClaimName" style="font-size:1.2rem;color:var(--txl);margin-bottom:12px"></div>
-    <!-- 勾選項目列表 -->
-    <div id="settleCheckList" style="margin-bottom:14px;border:1.5px solid var(--bdrm);border-radius:var(--rsm);overflow:hidden"></div>
-    <!-- 加總 -->
-    <div style="display:flex;justify-content:space-between;align-items:center;background:var(--pale);border-radius:var(--rsm);padding:10px 14px;margin-bottom:14px">
-      <span style="font-size:1.2rem;font-weight:700;color:var(--txm)">勾選合計</span>
-      <span style="font-family:'DM Serif Display',serif;font-size:2.0rem;color:var(--a2)" id="settleTotalAmt">$0</span>
-    </div>
+    <div style="font-size:1.2rem;color:var(--txl);margin-bottom:16px" id="settleClaimName"></div>
     <div class="fg">
       <label class="flbl">回款入帳帳戶</label>
       <select class="finp" id="settleAcc"></select>
@@ -1951,82 +1945,45 @@ function addClaim() {
   renderHome();
 }
 
-let settleTargetId = null; // kept for legacy compat
-let _settleChecked = new Set();
-
-function _settleUpdateTotal() {
-  const total = [..._settleChecked].reduce((s, id) => {
-    const c = (D.claims||[]).find(x=>x.id===id);
-    return s + (c ? c.amt : 0);
-  }, 0);
-  document.getElementById('settleTotalAmt').textContent = fmt(total);
-  document.querySelector('#settleModal .btn-main').disabled = _settleChecked.size === 0;
-}
-
+let settleTargetId = null;
 function openSettle(claimId) {
-  // Build list of all pending claims, pre-check the one clicked
-  const pending = (D.claims||[]).filter(c=>c.status==='pending').sort((a,b)=>b.ts-a.ts);
-  _settleChecked = new Set([claimId]);
-
+  settleTargetId = claimId;
   const modal = document.getElementById('settleModal');
   modal.style.display = 'flex';
   requestAnimationFrame(() => modal.classList.add('visible'));
-
-  document.getElementById('settleClaimName').textContent = pending.length > 1 ? '可勾選多筆一起沖銷' : '';
-
-  // Render checklist
-  document.getElementById('settleCheckList').innerHTML = pending.map(clm => `
-    <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--bdr);cursor:pointer;background:var(--surf)" id="settle-row-${clm.id}">
-      <input type="checkbox" ${clm.id===claimId?'checked':''} onchange="
-        if(this.checked) _settleChecked.add('${clm.id}');
-        else _settleChecked.delete('${clm.id}');
-        _settleUpdateTotal();
-      " style="width:18px;height:18px;accent-color:var(--a1);flex-shrink:0">
-      <div style="flex:1">
-        <div style="font-size:1.3rem;font-weight:700;color:var(--tx)">${clm.note}</div>
-        <div style="font-size:1.1rem;color:var(--txl);margin-top:2px">${clm.dk}</div>
-      </div>
-      <div style="font-size:1.3rem;font-weight:700;color:var(--a2);flex-shrink:0">${fmt(clm.amt)}</div>
-    </label>`).join('');
-
-  // Account selector
-  const opts = D.accounts.filter(a=>!a.archived).map(a=>`<option value="${a.id}">${a.emoji||''} ${a.name}</option>`).join('');
+  const claim = (D.claims||[]).find(c=>c.id===claimId);
+  if (!claim) return;
+  document.getElementById('settleClaimName').textContent = `${claim.note}・${fmt(claim.amt)}`;
+  const opts = D.accounts.filter(a=>!a.archived).map(a=>`<option value="${a.id}">${a.emoji} ${a.name}</option>`).join('');
   document.getElementById('settleAcc').innerHTML = opts;
   const bankIdx = D.accounts.findIndex(a=>a.type==='bank');
   if (bankIdx>=0) document.getElementById('settleAcc').selectedIndex = bankIdx;
-  document.getElementById('settleDate').value = new Date().toISOString().slice(0,10);
-  _settleUpdateTotal();
+  const todayStr = new Date().toISOString().slice(0,10);
+  document.getElementById('settleDate').value = todayStr;
 }
-
 function closeSettle() {
   const modal = document.getElementById('settleModal');
   modal.classList.remove('visible');
   setTimeout(() => { modal.style.display = 'none'; }, 150);
   settleTargetId = null;
-  _settleChecked = new Set();
 }
-
 function confirmSettle() {
-  if (_settleChecked.size === 0) { toast('請至少勾選一筆'); return; }
+  const claim = (D.claims||[]).find(c=>c.id===settleTargetId);
+  if (!claim) return;
   const toAcc = document.getElementById('settleAcc').value;
+  // parse selected date
   const dateVal = document.getElementById('settleDate').value;
   const settleDk = dateVal ? dateVal.slice(0,10) : getTK();
   const settleMk = settleDk.slice(0,7);
-  const now = Date.now();
-  let count = 0;
-  _settleChecked.forEach((claimId, i) => {
-    const claim = (D.claims||[]).find(c=>c.id===claimId);
-    if (!claim) return;
-    claim.status = 'done';
-    claim.settledAcc = toAcc;
-    claim.settledAt = settleDk;
-    D.txs.push({id:'tx'+(now+i), type:'settle', amt:claim.amt, cat:'settle', acc:toAcc, note:claim.note+'（回款）', mk:settleMk, dk:settleDk, ts:now+i, claimId:claim.id});
-    count++;
-  });
+  // mark claim as settled
+  claim.status = 'done';
+  claim.settledAcc = toAcc;
+  claim.settledAt = settleDk;
+  // push a settlement tx (affects account balance, not budget, not income)
+  D.txs.push({id:'tx'+Date.now(), type:'settle', amt:claim.amt, cat:'settle', acc:toAcc, note:claim.note+'（回款）', mk:settleMk, dk:settleDk, ts:Date.now(), claimId:claim.id});
   save();
   closeSettle();
-  toast(`已沖銷 ${count} 筆 ✅`);
-  renderAccounts();
+  toast('沖銷完成 ✅');
   renderReport();
   renderHome();
 }
