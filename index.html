@@ -12,7 +12,6 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="貓貓帳務所">
 <link rel="apple-touch-icon" href="icons/pwa-icon-192.png">
-<link rel="icon" type="image/png" href="icons/pwa-icon-512.png">
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', ()=>{
@@ -963,9 +962,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
 <!-- ══ 報表 ══ -->
 <div id="pg-report" class="pg">
 
-
-
-  <!-- 資產負債表 -->
+  <!-- 資產負債表（月快照）-->
   <div class="card">
     <div class="card-ttl">📊 資產負債表（月快照）</div>
     <div id="snapshotTable"></div>
@@ -1161,6 +1158,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
 </div>
 
 <!-- Edit transaction modal -->
+<!-- 編輯交易 modal -->
 <div class="modal-overlay" id="editTxModal">
   <div class="modal-box">
     <div class="modal-title">編輯記錄</div>
@@ -1168,6 +1166,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
       <label class="flbl">金額</label>
       <input type="number" class="finp" id="editAmt" placeholder="0" inputmode="decimal">
     </div>
+    <!-- 類別格：僅 exp / inc 顯示，clm / trf / settle 隱藏 -->
     <div class="fg" id="editCatRow" style="display:none">
       <label class="flbl">類別</label>
       <div class="cgrid" id="editCatGrid"></div>
@@ -1180,10 +1179,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
       <label class="flbl">日期</label>
       <input type="date" class="finp" id="editDate">
     </div>
-    <div class="fg" id="editCatRow" style="display:none">
-      <label class="flbl">類別</label>
-      <div class="cgrid" id="editCatGrid"></div>
-    </div>
+    <!-- 帳戶選單：trf / settle 不顯示 -->
     <div class="fg" id="editAccRow">
       <label class="flbl">帳戶</label>
       <select class="finp" id="editAccSel"></select>
@@ -1241,11 +1237,18 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
   </div>
 </div>
 
-<!-- Settle modal -->
+<!-- Settle modal：支援多選墊款一次沖銷 -->
 <div id="settleModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:200;align-items:center;justify-content:center;">
-  <div style="background:var(--surf);border-radius:var(--r);padding:24px;margin:0 20px;width:calc(100% - 40px);max-width:400px">
+  <div style="background:var(--surf);border-radius:var(--r);padding:24px;margin:0 20px;width:calc(100% - 40px);max-width:420px;max-height:85vh;overflow-y:auto">
     <div style="font-size:1.5rem;font-weight:700;margin-bottom:4px">沖銷回款</div>
-    <div style="font-size:1.2rem;color:var(--txl);margin-bottom:16px" id="settleClaimName"></div>
+    <div style="font-size:1.2rem;color:var(--txl);margin-bottom:12px" id="settleClaimName"></div>
+    <!-- 待沖銷項目勾選清單 -->
+    <div id="settleCheckList" style="margin-bottom:14px;border:1.5px solid var(--bdrm);border-radius:var(--rsm);overflow:hidden"></div>
+    <!-- 勾選合計 -->
+    <div style="display:flex;justify-content:space-between;align-items:center;background:var(--pale);border-radius:var(--rsm);padding:10px 14px;margin-bottom:14px">
+      <span style="font-size:1.2rem;font-weight:700;color:var(--txm)">勾選合計</span>
+      <span style="font-family:'DM Serif Display',serif;font-size:2.0rem;color:var(--a2)" id="settleTotalAmt">$0</span>
+    </div>
     <div class="fg">
       <label class="flbl">回款入帳帳戶</label>
       <select class="finp" id="settleAcc"></select>
@@ -1256,7 +1259,7 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
       <button class="btn-ghost" style="margin-top:0" onclick="closeSettle()">取消</button>
-      <button class="btn-main" onclick="confirmSettle()">確認沖銷</button>
+      <button class="btn-main" id="settleConfirmBtn" onclick="confirmSettle()">確認沖銷</button>
     </div>
   </div>
 </div>
@@ -1464,10 +1467,7 @@ window.saveToSheets = async () => {
   }
 };
 
-// override save() to also sync to Sheets
-const _origSave = function() { localStorage.setItem('fd2', JSON.stringify(D)); };
-
-// ══ DATA ══
+// ══ 資料初始化 ══
 let D = JSON.parse(localStorage.getItem('fd2') || '{}');
 if (!D.accounts) D.accounts = [];
 if (!D.cats) D.cats = [
@@ -1495,12 +1495,10 @@ const INC_CATS_DEFAULT = [
   {id:'divid',   name:'分配金',   emoji:'📊'},
   {id:'other_i', name:'其他收入', emoji:'➕'},
 ];
-// 取得目前收入類別（預設＋自訂）
+// 取得目前收入類別（預設 + 使用者自訂，排除已封存）
 function getIncCats() {
-  return [...INC_CATS_DEFAULT, ...(D.incCats||[]).filter(c=>!c.archived)];
+  return [...INC_CATS_DEFAULT, ...(D.incCats||[]).filter(c => !c.archived)];
 }
-// 向下相容
-const INC_CATS = INC_CATS_DEFAULT;
 
 const BANK_ICONS = [
   { id:'first',        name:'第一銀行',   file:'first.png' },
@@ -1682,16 +1680,6 @@ function fmtDk(dk) {
            String(d.getMonth()+1).padStart(2,'0') + '-' +
            String(d.getDate()).padStart(2,'0');
   } catch(e) { return s.slice(0,10); }
-}
-function _fmtDk_orig(dk) {
-  if (!dk) return '';
-  // 如果是純日期格式 YYYY-MM-DD 直接回傳
-  if (/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(dk)) return dk;
-  // 舊資料帶 UTC 時區（如 2026-04-09T16:00:00.000Z）→ 用本地時間解析
-  try {
-    const d = new Date(dk);
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  } catch(e) { return dk.slice(0,10); }
 }
 function curMK() { return getMK(new Date()); }
 function calcBudget() { return D.cats.reduce((s,c)=>s+(c.budget||0),0); }
@@ -1945,47 +1933,106 @@ function addClaim() {
   renderHome();
 }
 
-let settleTargetId = null;
+// 目前沖銷 modal 勾選的 claim id 集合
+let settleTargetId = null; // 保留相容性
+let _settleChecked = new Set();
+
+// 更新勾選合計金額，並控制確認按鈕的 disabled 狀態
+function _settleUpdateTotal() {
+  const total = [..._settleChecked].reduce((s, id) => {
+    const c = (D.claims||[]).find(x => x.id === id);
+    return s + (c ? c.amt : 0);
+  }, 0);
+  const el = document.getElementById('settleTotalAmt');
+  if (el) el.textContent = fmt(total);
+  const btn = document.getElementById('settleConfirmBtn');
+  if (btn) btn.disabled = _settleChecked.size === 0;
+}
+
+// 開啟沖銷 modal：列出所有待沖銷項目，預選點擊的那筆
 function openSettle(claimId) {
-  settleTargetId = claimId;
+  const pending = (D.claims||[]).filter(c => c.status === 'pending').sort((a, b) => b.ts - a.ts);
+  _settleChecked = new Set([claimId]);
+
+  // 立刻顯示 modal，讓使用者感覺即時回應
   const modal = document.getElementById('settleModal');
   modal.style.display = 'flex';
   requestAnimationFrame(() => modal.classList.add('visible'));
-  const claim = (D.claims||[]).find(c=>c.id===claimId);
-  if (!claim) return;
-  document.getElementById('settleClaimName').textContent = `${claim.note}・${fmt(claim.amt)}`;
-  const opts = D.accounts.filter(a=>!a.archived).map(a=>`<option value="${a.id}">${a.emoji} ${a.name}</option>`).join('');
+
+  // 標題
+  document.getElementById('settleClaimName').textContent =
+    pending.length > 1 ? '可勾選多筆一起沖銷' : '';
+
+  // 勾選清單
+  document.getElementById('settleCheckList').innerHTML = pending.map(clm => `
+    <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--bdr);cursor:pointer;background:var(--surf)">
+      <input type="checkbox" ${clm.id === claimId ? 'checked' : ''}
+        onchange="if(this.checked)_settleChecked.add('${clm.id}');else _settleChecked.delete('${clm.id}');_settleUpdateTotal();"
+        style="width:18px;height:18px;accent-color:var(--a1);flex-shrink:0">
+      <div style="flex:1">
+        <div style="font-size:1.3rem;font-weight:700;color:var(--tx)">${clm.note}</div>
+        <div style="font-size:1.1rem;color:var(--txl);margin-top:2px">${clm.dk}</div>
+      </div>
+      <div style="font-size:1.3rem;font-weight:700;color:var(--a2);flex-shrink:0">${fmt(clm.amt)}</div>
+    </label>`).join('');
+
+  // 帳戶選單，預選第一個銀行帳戶
+  const opts = D.accounts.filter(a => !a.archived)
+    .map(a => `<option value="${a.id}">${a.emoji||''} ${a.name}</option>`).join('');
   document.getElementById('settleAcc').innerHTML = opts;
-  const bankIdx = D.accounts.findIndex(a=>a.type==='bank');
-  if (bankIdx>=0) document.getElementById('settleAcc').selectedIndex = bankIdx;
-  const todayStr = new Date().toISOString().slice(0,10);
-  document.getElementById('settleDate').value = todayStr;
+  const bankIdx = D.accounts.findIndex(a => a.type === 'bank');
+  if (bankIdx >= 0) document.getElementById('settleAcc').selectedIndex = bankIdx;
+
+  // 預填今天日期
+  document.getElementById('settleDate').value = getTK();
+  _settleUpdateTotal();
 }
+
+// 關閉沖銷 modal（淡出動畫後隱藏）
 function closeSettle() {
   const modal = document.getElementById('settleModal');
   modal.classList.remove('visible');
   setTimeout(() => { modal.style.display = 'none'; }, 150);
   settleTargetId = null;
+  _settleChecked = new Set();
 }
+
+// 確認沖銷：先關 modal，再用 requestAnimationFrame 渲染，避免畫面卡頓
 function confirmSettle() {
-  const claim = (D.claims||[]).find(c=>c.id===settleTargetId);
-  if (!claim) return;
+  if (_settleChecked.size === 0) { toast('請至少勾選一筆'); return; }
   const toAcc = document.getElementById('settleAcc').value;
-  // parse selected date
-  const dateVal = document.getElementById('settleDate').value;
-  const settleDk = dateVal ? dateVal.slice(0,10) : getTK();
-  const settleMk = settleDk.slice(0,7);
-  // mark claim as settled
-  claim.status = 'done';
-  claim.settledAcc = toAcc;
-  claim.settledAt = settleDk;
-  // push a settlement tx (affects account balance, not budget, not income)
-  D.txs.push({id:'tx'+Date.now(), type:'settle', amt:claim.amt, cat:'settle', acc:toAcc, note:claim.note+'（回款）', mk:settleMk, dk:settleDk, ts:Date.now(), claimId:claim.id});
+  const settleDk = (document.getElementById('settleDate').value || getTK()).slice(0, 10);
+  const settleMk = settleDk.slice(0, 7);
+  const now = Date.now();
+  let count = 0;
+
+  // 先更新資料
+  _settleChecked.forEach((claimId, i) => {
+    const claim = (D.claims||[]).find(c => c.id === claimId);
+    if (!claim) return;
+    claim.status = 'done';
+    claim.settledAcc = toAcc;
+    claim.settledAt = settleDk;
+    D.txs.push({
+      id: 'tx' + (now + i), type: 'settle', amt: claim.amt,
+      cat: 'settle', acc: toAcc,
+      note: claim.note + '（回款）',
+      mk: settleMk, dk: settleDk,
+      ts: now + i, claimId: claim.id
+    });
+    count++;
+  });
   save();
+
+  // 先關 modal + 顯示 toast，讓畫面先有反應
   closeSettle();
-  toast('沖銷完成 ✅');
-  renderReport();
-  renderHome();
+  toast(`已沖銷 ${count} 筆 ✅`);
+
+  // 用 requestAnimationFrame 延後 render，避免 JS 卡住畫面
+  requestAnimationFrame(() => {
+    renderAccounts();
+    renderHome();
+  });
 }
 
 function cancelSettle(claimId) {
@@ -4030,80 +4077,98 @@ function getSearchQuery() {
   return el ? el.value.trim().toLowerCase() : '';
 }
 
-// ══ EDIT TX ══
+// ══ 編輯交易 ══
 let editTxId = null;
+
 function openEditTx(id) {
-  const tx = D.txs.find(t=>t.id===id);
+  const tx = D.txs.find(t => t.id === id);
   if (!tx) return;
   editTxId = id;
+
+  // 填入基本欄位
   document.getElementById('editAmt').value = tx.amt || '';
   document.getElementById('editNote').value = tx.note || '';
   document.getElementById('editDate').value = fmtDk(tx.dk) || getTK();
-  const _catRow = document.getElementById('editCatRow');
-  const _catGrid = document.getElementById('editCatGrid');
-  if ((tx.type==='exp'||tx.type==='inc') && _catRow && _catGrid) {
-    _catRow.style.display = 'block';
-    const _cats = tx.type==='inc' ? getIncCats() : D.cats.filter(ct=>!ct.archived);
-    _catGrid.innerHTML = _cats.map(cat=>`<button class="cbtn ${cat.id===tx.cat?'sel':''}" onclick="
-      _catGrid.querySelectorAll('.cbtn').forEach(b=>b.classList.remove('sel'));
-      this.classList.add('sel');
-      document.getElementById('editTxModal')._selCat='${cat.id}';
-    "><span class="ce">${cat.emoji}</span>${cat.name}</button>`).join('');
+
+  // 類別格：僅 exp / inc 顯示
+  const catRow  = document.getElementById('editCatRow');
+  const catGrid = document.getElementById('editCatGrid');
+  if (catRow && catGrid && (tx.type === 'exp' || tx.type === 'inc')) {
+    catRow.style.display = 'block';
+    const cats = tx.type === 'inc' ? getIncCats() : D.cats.filter(ct => !ct.archived);
+    catGrid.innerHTML = cats.map(cat => `
+      <button class="cbtn ${cat.id === tx.cat ? 'sel' : ''}" onclick="
+        document.querySelectorAll('#editCatGrid .cbtn').forEach(b=>b.classList.remove('sel'));
+        this.classList.add('sel');
+        window._editCat='${cat.id}';
+        document.getElementById('editTxModal')._selCat='${cat.id}';
+      "><span class="ce">${cat.emoji}</span>${cat.name}</button>`).join('');
+    window._editCat = tx.cat || '';
     document.getElementById('editTxModal')._selCat = tx.cat;
-  } else if (_catRow) {
-    _catRow.style.display = 'none';
+  } else if (catRow) {
+    catRow.style.display = 'none';
   }
+
+  // 帳戶選單：trf / settle 不顯示
   const accRow = document.getElementById('editAccRow');
   const accSel = document.getElementById('editAccSel');
-  if (tx.type==='trf'||tx.type==='settle') {
+  if (tx.type === 'trf' || tx.type === 'settle') {
     accRow.style.display = 'none';
   } else {
     accRow.style.display = 'block';
-    accSel.innerHTML = D.accounts.map(a=>`<option value="${a.id}">${a.emoji||''} ${a.name}</option>`).join('');
+    accSel.innerHTML = D.accounts.map(a =>
+      `<option value="${a.id}">${a.emoji||''} ${a.name}</option>`).join('');
     if (tx.acc) {
-      const idx = [...accSel.options].findIndex(o=>o.value===tx.acc);
-      if (idx>=0) accSel.selectedIndex = idx;
+      const idx = [...accSel.options].findIndex(o => o.value === tx.acc);
+      if (idx >= 0) accSel.selectedIndex = idx;
     }
   }
-  const catRow=document.getElementById('editCatRow');
-  const catGrid=document.getElementById('editCatGrid');
-  if (catRow&&catGrid&&(tx.type==='exp'||tx.type==='inc')) {
-    catRow.style.display='block';
-    const cats=tx.type==='inc'?getIncCats():D.cats.filter(ct=>!ct.archived);
-    catGrid.innerHTML=cats.map(ct=>`<button class="cbtn ${tx.cat===ct.id?'sel':''}" onclick="window._editCat='${ct.id}';document.querySelectorAll('#editCatGrid .cbtn').forEach(b=>b.classList.remove('sel'));this.classList.add('sel')">`+
-      `<span class="ce">${ct.emoji}</span>${ct.name}</button>`).join('');
-    window._editCat=tx.cat||'';
-  } else if (catRow) catRow.style.display='none';
+
   document.getElementById('editTxModal').classList.add('show');
 }
+
 function closeEditTx() {
   document.getElementById('editTxModal').classList.remove('show');
   editTxId = null;
 }
+
 function confirmEditTx() {
-  const tx = D.txs.find(t=>t.id===editTxId);
+  const tx = D.txs.find(t => t.id === editTxId);
   if (!tx) return;
   const amt = parseFloat(document.getElementById('editAmt').value);
   const note = document.getElementById('editNote').value.trim();
-  const dk = document.getElementById('editDate').value;
-  if (!amt||amt<=0) { toast('請輸入金額'); return; }
-  tx.amt = amt;
+  const dk   = document.getElementById('editDate').value;
+  if (!amt || amt <= 0) { toast('請輸入金額'); return; }
+
+  tx.amt  = amt;
   tx.note = note;
-  tx.dk = dk.slice(0,10);
-  tx.mk = dk.slice(0,7);
+  tx.dk   = dk.slice(0, 10);
+  tx.mk   = dk.slice(0, 7);
+
+  // 更新類別（exp / inc 才有）
   const _modal = document.getElementById('editTxModal');
-  if (_modal._selCat && (tx.type==='exp'||tx.type==='inc')) tx.cat = _modal._selCat;
-  if (tx.type!=='trf') {
-    const accSel=document.getElementById('editAccSel');
-    if (accSel&&accSel.value){tx.acc=accSel.value;const ao=D.accounts.find(a=>a.id===accSel.value);if(ao)tx.accName=ao.name;}
-    if (window._editCat) tx.cat=window._editCat;
+  if (_modal._selCat && (tx.type === 'exp' || tx.type === 'inc')) tx.cat = _modal._selCat;
+  if (window._editCat && (tx.type === 'exp' || tx.type === 'inc')) tx.cat = window._editCat;
+
+  // 更新帳戶（非轉帳類型才有）
+  if (tx.type !== 'trf' && tx.type !== 'settle') {
+    const accSel = document.getElementById('editAccSel');
+    if (accSel && accSel.value) {
+      tx.acc = accSel.value;
+      const ao = D.accounts.find(a => a.id === accSel.value);
+      if (ao) tx.accName = ao.name;
+    }
   }
+
   save();
-  if (tx.type==='clm' && tx.claimId) {
-    const claim = (D.claims||[]).find(c=>c.id===tx.claimId);
-    if (claim) { claim.amt=tx.amt; claim.note=tx.note; claim.dk=tx.dk; claim.mk=tx.mk; }
+
+  // 若為墊款 tx，同步更新 D.claims 對應記錄的金額、事由、日期
+  if (tx.type === 'clm' && tx.claimId) {
+    const claim = (D.claims||[]).find(c => c.id === tx.claimId);
+    if (claim) { claim.amt = tx.amt; claim.note = tx.note; claim.dk = tx.dk; claim.mk = tx.mk; }
     save();
   }
+
   closeEditTx();
   toast('已更新 ✓');
   renderHome();
