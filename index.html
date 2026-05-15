@@ -3683,6 +3683,7 @@ function renderCal() {
     if(!dayMap[dk]) dayMap[dk]={exp:0,inc:0,txs:[]};
     if(tx.type==='exp') dayMap[dk].exp+=tx.amt;
     if(tx.type==='inc') dayMap[dk].inc+=tx.amt;
+    if(tx.type==='clm') dayMap[dk].exp+=tx.amt; // 墊款算支出顯示
     dayMap[dk].txs.push(tx);
   });
   const today=getTK();
@@ -3722,13 +3723,20 @@ function showCalDetail(dk, info) {
   const allCats=[...D.cats,...getIncCats()];
   detail.innerHTML=`<div style="font-size:1.1rem;font-weight:700;color:var(--txl);margin-bottom:8px">${dk}</div>`+
     info.txs.sort((a,b)=>b.ts-a.ts).map(tx=>{
+      const isClm = tx.type==='clm';
+      const isSettle = tx.type==='settle';
       const cat=allCats.find(c=>c.id===tx.cat)||{emoji:'📦',name:''};
+      const ico = isSettle?'✅':isClm?'🧾':cat.emoji;
+      const typeClass = (isClm||isSettle)?'clm':tx.type;
+      const amtPrefix = isSettle?'+': (tx.type==='inc'?'+':'−');
       const acc=D.accounts.find(a=>a.id===tx.acc);
+      const tag = isClm?`<span class="tag" style="background:#FFF8E0;color:#A07000;margin-left:4px">墊款</span>`
+                : isSettle?`<span class="tag" style="background:#E0F5E8;color:#1A7A40;margin-left:4px">回款</span>`:'';
       return `<div class="tx-item" style="padding:7px 0">
-        <div class="tx-ico ${tx.type}">${cat.emoji}</div>
-        <div class="tx-info"><div class="tx-name">${tx.note||cat.name}</div>
+        <div class="tx-ico ${typeClass}">${ico}</div>
+        <div class="tx-info"><div class="tx-name">${tx.note||cat.name}${tag}</div>
         <div class="tx-meta">${acc?.name||tx.accName||'未知帳戶'}</div></div>
-        <div class="tx-amt ${tx.type}">${tx.type==='inc'?'+':'−'}${fmt(tx.amt)}</div>
+        <div class="tx-amt ${typeClass}">${amtPrefix}${fmt(tx.amt)}</div>
         <button class="tx-del" onclick="openEditTx('${tx.id}')" style="opacity:0.4;font-size:1.3rem">✏️</button>
         <button class="tx-del" onclick="deleteTx('${tx.id}');renderCal()">✕</button>
       </div>`;
