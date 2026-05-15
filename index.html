@@ -4038,7 +4038,7 @@ function openEditTx(id) {
   document.getElementById('editAmt').value = tx.amt || '';
   document.getElementById('editNote').value = tx.note || '';
   document.getElementById('editDate').value = fmtDk(tx.dk) || getTK();
-  let _editCat = tx.cat || null;
+  // 類別列：clm/settle 不顯示
   const _catRow = document.getElementById('editCatRow');
   const _catGrid = document.getElementById('editCatGrid');
   if ((tx.type==='exp'||tx.type==='inc') && _catRow && _catGrid) {
@@ -4053,10 +4053,10 @@ function openEditTx(id) {
   } else if (_catRow) {
     _catRow.style.display = 'none';
   }
-  // 帳戶選單（轉帳類型不顯示）
+  // 帳戶選單（轉帳/settle 不顯示）
   const accRow = document.getElementById('editAccRow');
   const accSel = document.getElementById('editAccSel');
-  if (tx.type==='trf') {
+  if (tx.type==='trf'||tx.type==='settle') {
     accRow.style.display = 'none';
   } else {
     accRow.style.display = 'block';
@@ -4066,10 +4066,10 @@ function openEditTx(id) {
       if (idx>=0) accSel.selectedIndex = idx;
     }
   }
-  // 類別選擇
+  // 類別選擇（clm/settle/trf 不顯示）
   const catRow=document.getElementById('editCatRow');
   const catGrid=document.getElementById('editCatGrid');
-  if (catRow&&catGrid&&tx.type!=='trf') {
+  if (catRow&&catGrid&&(tx.type==='exp'||tx.type==='inc')) {
     catRow.style.display='block';
     const cats=tx.type==='inc'?getIncCats():D.cats.filter(ct=>!ct.archived);
     catGrid.innerHTML=cats.map(ct=>`<button class="cbtn ${tx.cat===ct.id?'sel':''}" onclick="window._editCat='${ct.id}';document.querySelectorAll('#editCatGrid .cbtn').forEach(b=>b.classList.remove('sel'));this.classList.add('sel')">`+
@@ -4101,9 +4101,16 @@ function confirmEditTx() {
     if (window._editCat) tx.cat=window._editCat;
   }
   save();
+  // 若為墊款 tx，同步更新 D.claims 對應記錄
+  if (tx.type==='clm' && tx.claimId) {
+    const claim = (D.claims||[]).find(c=>c.id===tx.claimId);
+    if (claim) { claim.amt=tx.amt; claim.note=tx.note; claim.dk=tx.dk; claim.mk=tx.mk; }
+    save();
+  }
   closeEditTx();
   toast('已更新 ✓');
   renderHome();
+  renderAccounts();
 }
 
 // ══ QUICK ADD ══
