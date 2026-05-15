@@ -288,8 +288,6 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
 /* ── Edit modal ── */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:200;align-items:center;justify-content:center;}
 .modal-overlay.show{display:flex;}
-#settleModal{opacity:0;transition:opacity .15s;}
-#settleModal.visible{opacity:1;}
 .modal-box{background:var(--surf);border-radius:var(--r);padding:24px;margin:0 20px;width:calc(100% - 40px);max-width:420px;max-height:85vh;overflow-y:auto;}
 .modal-title{font-family:'DM Serif Display',serif;font-size:1.8rem;color:var(--tx);margin-bottom:16px;}
 .income-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bdr);}
@@ -706,17 +704,10 @@ select.finp{appearance:none;-webkit-appearance:none;cursor:pointer;}
   <!-- 報帳本 -->
   <div class="card">
     <div class="card-ttl">🧾 報帳本</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
       <div class="scard"><div class="scard-lbl">共墊出</div><div class="scard-val" style="font-size:1.4rem;color:#B07800" id="accClmTotal">$0</div></div>
       <div class="scard"><div class="scard-lbl">已回收</div><div class="scard-val" style="font-size:1.4rem;color:#2A9A58" id="accClmRecovered">$0</div></div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
       <div class="scard"><div class="scard-lbl">尚欠</div><div class="scard-val" style="font-size:1.4rem;color:#D94040" id="accClmOwed">$0</div></div>
-      <div class="scard" style="border-color:var(--a1);background:var(--pale)">
-        <div class="scard-lbl" style="color:var(--a2)">今日回收</div>
-        <div class="scard-val" style="font-size:1.4rem;color:var(--a2)" id="accClmToday">$0</div>
-        <div class="scard-sub" id="accClmTodayCount" style="font-size:1.0rem"></div>
-      </div>
     </div>
     <div id="accClaimList"></div>
   </div>
@@ -1947,23 +1938,21 @@ function addClaim() {
 let settleTargetId = null;
 function openSettle(claimId) {
   settleTargetId = claimId;
-  const modal = document.getElementById('settleModal');
-  modal.style.display = 'flex';
-  requestAnimationFrame(() => modal.classList.add('visible'));
   const claim = (D.claims||[]).find(c=>c.id===claimId);
   if (!claim) return;
   document.getElementById('settleClaimName').textContent = `${claim.note}・${fmt(claim.amt)}`;
   const opts = D.accounts.filter(a=>!a.archived).map(a=>`<option value="${a.id}">${a.emoji} ${a.name}</option>`).join('');
   document.getElementById('settleAcc').innerHTML = opts;
+  // default to first bank account
   const bankIdx = D.accounts.findIndex(a=>a.type==='bank');
   if (bankIdx>=0) document.getElementById('settleAcc').selectedIndex = bankIdx;
+  // pre-fill today's date
   const todayStr = new Date().toISOString().slice(0,10);
   document.getElementById('settleDate').value = todayStr;
+  document.getElementById('settleModal').style.display = 'flex';
 }
 function closeSettle() {
-  const modal = document.getElementById('settleModal');
-  modal.classList.remove('visible');
-  setTimeout(() => { modal.style.display = 'none'; }, 150);
+  document.getElementById('settleModal').style.display = 'none';
   settleTargetId = null;
 }
 function confirmSettle() {
@@ -1985,21 +1974,6 @@ function confirmSettle() {
   toast('沖銷完成 ✅');
   renderReport();
   renderHome();
-}
-
-function cancelSettle(claimId) {
-  if (!confirm('確定取消這筆沖銷？帳戶餘額將一併還原。')) return;
-  const claim = D.claims.find(c => c.id === claimId);
-  if (!claim || claim.status !== 'done') return;
-  D.txs = D.txs.filter(t => !(t.type === 'settle' && t.claimId === claimId));
-  claim.status = 'pending';
-  delete claim.settledAcc;
-  delete claim.settledAt;
-  save();
-  toast('沖銷已取消，可重新操作 ↩️');
-  renderReport();
-  renderHome();
-  renderAccounts();
 }
 
 function deleteTx(id) {
@@ -2189,12 +2163,6 @@ function renderAccounts() {
   const el1=document.getElementById('accClmTotal'); if(el1) el1.textContent=fmt(tot);
   const el2=document.getElementById('accClmRecovered'); if(el2) el2.textContent=fmt(rec);
   const el3=document.getElementById('accClmOwed'); if(el3) el3.textContent=fmt(tot-rec);
-  const todayStr = new Date().toISOString().slice(0,10);
-  const todaySettled = claims.filter(c=>c.status==='done' && c.settledAt && c.settledAt.slice(0,10)===todayStr);
-  const todayAmt = todaySettled.reduce((s,c)=>s+c.amt,0);
-  const el4=document.getElementById('accClmToday'); if(el4) el4.textContent=fmt(todayAmt);
-  const el5=document.getElementById('accClmTodayCount');
-  if(el5) el5.textContent=todaySettled.length>0?`共 ${todaySettled.length} 筆`:todayAmt===0?'今日尚無回收':'';
   const cl=document.getElementById('accClaimList');
   if(cl) {
     const sorted=[...claims].sort((a,b)=>{if(a.status==='pending'&&b.status!=='pending')return -1;if(b.status==='pending'&&a.status!=='pending')return 1;return b.ts-a.ts;});
@@ -2210,7 +2178,7 @@ function renderAccounts() {
           </div>
           <div style="flex-shrink:0">
             <div class="claim-amt">${fmt(clm.amt)}</div>
-            ${isPending?`<button class="btn-sm" onclick="openSettle('${clm.id}')" style="font-size:1.1rem;padding:4px 8px;margin-top:4px">沖銷</button>`:`<button class="btn-sm ghost" onclick="cancelSettle('${clm.id}')" style="font-size:1.0rem;padding:3px 7px;margin-top:4px">取消沖銷</button>`}
+            ${isPending?`<button class="btn-sm" onclick="openSettle('${clm.id}')" style="font-size:1.1rem;padding:4px 8px;margin-top:4px">沖銷</button>`:''}
           </div>
         </div>`;
       }).join('');
@@ -2649,7 +2617,7 @@ function renderClaimList() {
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
         <div class="claim-amt">${fmt(clm.amt)}</div>
-        ${isPending?`<button class="btn-sm" onclick="openSettle('${clm.id}')" style="font-size:1.1rem;padding:5px 10px">沖銷</button>`:`<button class="btn-sm ghost" onclick="cancelSettle('${clm.id}')" style="font-size:1.0rem;padding:3px 8px">取消沖銷</button>`}
+        ${isPending?`<button class="btn-sm" onclick="openSettle('${clm.id}')" style="font-size:1.1rem;padding:5px 10px">沖銷</button>`:''}
       </div>
     </div>`;
   }).join('');
@@ -3676,7 +3644,6 @@ function renderCal() {
     if(!dayMap[dk]) dayMap[dk]={exp:0,inc:0,txs:[]};
     if(tx.type==='exp') dayMap[dk].exp+=tx.amt;
     if(tx.type==='inc') dayMap[dk].inc+=tx.amt;
-    if(tx.type==='clm') dayMap[dk].exp+=tx.amt;
     dayMap[dk].txs.push(tx);
   });
   const today=getTK();
@@ -3716,19 +3683,13 @@ function showCalDetail(dk, info) {
   const allCats=[...D.cats,...getIncCats()];
   detail.innerHTML=`<div style="font-size:1.1rem;font-weight:700;color:var(--txl);margin-bottom:8px">${dk}</div>`+
     info.txs.sort((a,b)=>b.ts-a.ts).map(tx=>{
-      const isClm=tx.type==='clm', isSettle=tx.type==='settle';
       const cat=allCats.find(c=>c.id===tx.cat)||{emoji:'📦',name:''};
-      const ico=isSettle?'✅':isClm?'🧾':cat.emoji;
-      const typeClass=(isClm||isSettle)?'clm':tx.type;
-      const amtPrefix=isSettle?'+':(tx.type==='inc'?'+':'−');
       const acc=D.accounts.find(a=>a.id===tx.acc);
-      const tag=isClm?`<span class="tag" style="background:#FFF8E0;color:#A07000;margin-left:4px">墊款</span>`
-               :isSettle?`<span class="tag" style="background:#E0F5E8;color:#1A7A40;margin-left:4px">回款</span>`:'';
       return `<div class="tx-item" style="padding:7px 0">
-        <div class="tx-ico ${typeClass}">${ico}</div>
-        <div class="tx-info"><div class="tx-name">${tx.note||cat.name}${tag}</div>
+        <div class="tx-ico ${tx.type}">${cat.emoji}</div>
+        <div class="tx-info"><div class="tx-name">${tx.note||cat.name}</div>
         <div class="tx-meta">${acc?.name||tx.accName||'未知帳戶'}</div></div>
-        <div class="tx-amt ${typeClass}">${amtPrefix}${fmt(tx.amt)}</div>
+        <div class="tx-amt ${tx.type}">${tx.type==='inc'?'+':'−'}${fmt(tx.amt)}</div>
         <button class="tx-del" onclick="openEditTx('${tx.id}')" style="opacity:0.4;font-size:1.3rem">✏️</button>
         <button class="tx-del" onclick="deleteTx('${tx.id}');renderCal()">✕</button>
       </div>`;
@@ -4038,6 +3999,7 @@ function openEditTx(id) {
   document.getElementById('editAmt').value = tx.amt || '';
   document.getElementById('editNote').value = tx.note || '';
   document.getElementById('editDate').value = fmtDk(tx.dk) || getTK();
+  let _editCat = tx.cat || null;
   const _catRow = document.getElementById('editCatRow');
   const _catGrid = document.getElementById('editCatGrid');
   if ((tx.type==='exp'||tx.type==='inc') && _catRow && _catGrid) {
@@ -4052,9 +4014,10 @@ function openEditTx(id) {
   } else if (_catRow) {
     _catRow.style.display = 'none';
   }
+  // 帳戶選單（轉帳類型不顯示）
   const accRow = document.getElementById('editAccRow');
   const accSel = document.getElementById('editAccSel');
-  if (tx.type==='trf'||tx.type==='settle') {
+  if (tx.type==='trf') {
     accRow.style.display = 'none';
   } else {
     accRow.style.display = 'block';
@@ -4064,9 +4027,10 @@ function openEditTx(id) {
       if (idx>=0) accSel.selectedIndex = idx;
     }
   }
+  // 類別選擇
   const catRow=document.getElementById('editCatRow');
   const catGrid=document.getElementById('editCatGrid');
-  if (catRow&&catGrid&&(tx.type==='exp'||tx.type==='inc')) {
+  if (catRow&&catGrid&&tx.type!=='trf') {
     catRow.style.display='block';
     const cats=tx.type==='inc'?getIncCats():D.cats.filter(ct=>!ct.archived);
     catGrid.innerHTML=cats.map(ct=>`<button class="cbtn ${tx.cat===ct.id?'sel':''}" onclick="window._editCat='${ct.id}';document.querySelectorAll('#editCatGrid .cbtn').forEach(b=>b.classList.remove('sel'));this.classList.add('sel')">`+
@@ -4098,15 +4062,9 @@ function confirmEditTx() {
     if (window._editCat) tx.cat=window._editCat;
   }
   save();
-  if (tx.type==='clm' && tx.claimId) {
-    const claim = (D.claims||[]).find(c=>c.id===tx.claimId);
-    if (claim) { claim.amt=tx.amt; claim.note=tx.note; claim.dk=tx.dk; claim.mk=tx.mk; }
-    save();
-  }
   closeEditTx();
   toast('已更新 ✓');
   renderHome();
-  renderAccounts();
 }
 
 // ══ QUICK ADD ══
