@@ -3677,6 +3677,7 @@ function renderCal() {
     if(tx.type==='exp') dayMap[dk].exp+=tx.amt;
     if(tx.type==='inc') dayMap[dk].inc+=tx.amt;
     if(tx.type==='clm') dayMap[dk].exp+=tx.amt;
+    if(tx.type==='clm') dayMap[dk].exp+=tx.amt;
     dayMap[dk].txs.push(tx);
   });
   const today=getTK();
