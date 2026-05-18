@@ -3777,14 +3777,22 @@ function showCalDetail(dk, info) {
       const typeClass=(isClm||isSettle)?'clm':tx.type;
       const amtPrefix=isSettle?'+':(tx.type==='inc'?'+':'−');
       const acc=D.accounts.find(a=>a.id===tx.acc);
+      const isTrf=tx.type==='trf';
+      const fa=isTrf?D.accounts.find(a=>a.id===tx.from):null;
+      const ta=isTrf?D.accounts.find(a=>a.id===tx.to):null;
+      const metaText=isTrf
+        ? `${fa?.name||tx.fromName||'未知'} → ${ta?.name||tx.toName||'未知'}`
+        : acc?.name||tx.accName||'未知帳戶';
       const tag=isClm?`<span class="tag" style="background:#FFF8E0;color:#A07000;margin-left:4px">墊款</span>`
-               :isSettle?`<span class="tag" style="background:#E0F5E8;color:#1A7A40;margin-left:4px">回款</span>`:'';
+               :isSettle?`<span class="tag" style="background:#E0F5E8;color:#1A7A40;margin-left:4px">回款</span>`
+               :isTrf?`<span class="tag" style="background:#EEEEF8;color:#4858A0;margin-left:4px">轉帳</span>`:'';
+      const editFn=isTrf&&(tx.note||'').includes('信用卡還款')?'openEditPayment':'openEditTx';
       return `<div class="tx-item" style="padding:7px 0">
-        <div class="tx-ico ${typeClass}">${ico}</div>
+        <div class="tx-ico ${typeClass}">${isTrf?((tx.note||'').includes('信用卡還款')?'💳':'↔'):ico}</div>
         <div class="tx-info"><div class="tx-name">${tx.note||cat.name}${tag}</div>
-        <div class="tx-meta">${acc?.name||tx.accName||'未知帳戶'}</div></div>
+        <div class="tx-meta">${metaText}</div></div>
         <div class="tx-amt ${typeClass}">${amtPrefix}${fmt(tx.amt)}</div>
-        <button class="tx-del" onclick="openEditTx('${tx.id}')" style="opacity:0.4;font-size:1.3rem">✏️</button>
+        <button class="tx-del" onclick="${editFn}('${tx.id}')" style="opacity:0.4;font-size:1.3rem">✏️</button>
         <button class="tx-del" onclick="deleteTx('${tx.id}');renderCal()">✕</button>
       </div>`;
     }).join('');
