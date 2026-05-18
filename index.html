@@ -1384,19 +1384,20 @@ window.loadFromSheets = async () => {
     const json = await res.json();
     if (!json.ok) throw new Error(json.error);
     const sd = json.data;
-    // 以資料筆數多的為主，避免空的 Sheets 覆蓋本機資料
-    const localTxs = D.txs||[];
-    const sheetTxs = sd.txs||[];
-    if (sheetTxs.length >= localTxs.length) {
-      // Sheets 資料較多或相同 → 用 Sheets
+    // 用 _savedAt 時間戳判斷新舊，避免舊的 Sheets 資料蓋掉剛存的本機資料
+    const localSavedAt = D._savedAt || 0;
+    const sheetSavedAt = sd._savedAt || 0;
+    if (sheetSavedAt >= localSavedAt) {
+      // Sheets 資料較新或相同 → 用 Sheets
       if (sd.txs?.length)       D.txs       = sd.txs;
       if (sd.accounts?.length)  D.accounts  = sd.accounts;
       if (sd.cats?.length)      D.cats      = sd.cats;
       if (sd.fixedExp?.length)  D.fixedExp  = sd.fixedExp;
       if (sd.snapshots?.length) D.snapshots = sd.snapshots;
       if (sd.claims?.length)    D.claims    = sd.claims;
+      if (sd._savedAt)          D._savedAt  = sd._savedAt;
     } else {
-      // 本機資料較多 → 保留本機，並上傳到 Sheets
+      // 本機資料較新 → 保留本機，並上傳到 Sheets
       showSync('本機資料較新，上傳中...', 'sync-ing');
       setTimeout(()=>window.saveToSheets(), 500);
     }
@@ -1453,6 +1454,7 @@ window.saveToSheets = async () => {
       fixedExp: D.fixedExp||[],
       snapshots: D.snapshots||[],
       claims: D.claims||[],
+      _savedAt: D._savedAt || Date.now(), // 上傳時間戳，供下次 load 比較
     };
     const res = await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
@@ -1601,6 +1603,7 @@ applyFontScale(fontScale);
 
 // ══ SAVE / HELPERS ══
 function save() {
+  D._savedAt = Date.now(); // 記錄本機最後儲存時間戳
   localStorage.setItem('fd2', JSON.stringify(D));
   // debounce cloud save
   if (window._saveTimer) clearTimeout(window._saveTimer);
@@ -3156,7 +3159,11 @@ function confirmPayBill() {
       tx.paidAt = dk;
     }
   });
-  save();
+  D._savedAt = Date.now(); // 強制更新時間戳
+  localStorage.setItem('fd2', JSON.stringify(D)); // 先存本機
+  // 立即上傳，不等 debounce，避免重新整理時被舊 Sheets 資料蓋掉
+  if (window._saveTimer) clearTimeout(window._saveTimer);
+  if (window._currentUser) window.saveToSheets();
   closePayBill();
   toast('還款完成 ✅ '+fmt(amt));
   renderAccounts();
